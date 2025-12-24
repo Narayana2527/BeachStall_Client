@@ -10,7 +10,7 @@ const ProductItems = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/product/getProducts");
+        const response = await axios.get("https://beachstall-server.vercel.app/api/product/getProducts");
         // Update the state with the array from database
         setProducts(response.data);
         setLoading(false);

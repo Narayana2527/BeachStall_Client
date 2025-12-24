@@ -10,7 +10,7 @@ const CartPage = () => {
   const navigate = useNavigate();
 
   // Define base URL for images
-  const API_BASE_URL = "http://localhost:5000/";
+  const API_BASE_URL = "https://beachstall-server.vercel.app/";
 
   useEffect(() => {
     if (isLoggedIn) fetchCart();

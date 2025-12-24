@@ -14,7 +14,7 @@ export const CartProvider = ({ children }) => {
     const token = localStorage.getItem('token');
     if (!token) return;
     try {
-      const res = await axios.get('http://localhost:5000/api/cart', {
+      const res = await axios.get('https://beachstall-server.vercel.app/api/cart', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCart(res.data.items || []);

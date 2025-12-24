@@ -6,7 +6,7 @@ export default function Items({ title, products }) {
   const { addToCart } = useContext(CartContext);
   
   // Define your server base URL
-  const API_BASE_URL = "http://localhost:5000/";
+  const API_BASE_URL = "https://beachstall-server.vercel.app/";
 
   const handleAddToCart = (product) => {
     

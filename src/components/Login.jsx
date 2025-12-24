@@ -24,7 +24,7 @@ export default function Login() {
 
     try {
       // 3. Use 'credentials' to match your state variable
-      const res = await axios.post('http://localhost:5000/api/user/login', credentials);
+      const res = await axios.post('https://beachstall-server.vercel.app/api/user/login', credentials);
       
       if (res.data.token) {
         localStorage.setItem('token', res.data.token);
@@ -106,7 +106,7 @@ export default function Login() {
         <div className="text-center mt-6">
           <p className="text-gray-600">
             New here?{" "}
-            <Link to="/" className="text-indigo-600 font-bold hover:underline">
+            <Link to="/signup" className="text-indigo-600 font-bold hover:underline">
               Create an account
             </Link>
           </p>

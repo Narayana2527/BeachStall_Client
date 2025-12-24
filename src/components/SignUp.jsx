@@ -40,7 +40,7 @@ export default function Signup() {
 
     setIsLoading(true);
     try {
-      await axios.post("http://localhost:5000/api/user/register", formData);
+      await axios.post("https://beachstall-server.vercel.app/api/user/register", formData);
       navigate("/login");
     } catch (err) {
       alert(err.response?.data?.message || "Registration failed");
