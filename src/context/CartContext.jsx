@@ -37,7 +37,7 @@ export const CartProvider = ({ children }) => {
     return;
   }
   try {
-    const res = await axios.post('http://localhost:5000/api/cart/add', product, {
+    const res = await axios.post('https://beachstall-server.vercel.app/api/cart/add', product, {
       headers: { Authorization: `Bearer ${token}` }
     });
     // The backend returns the updated cart object
@@ -49,7 +49,7 @@ export const CartProvider = ({ children }) => {
 
   const removeItem = async (productId) => {
     const token = localStorage.getItem('token');
-    const res = await axios.delete(`http://localhost:5000/api/cart/remove/${productId}`, {
+    const res = await axios.delete(`https://beachstall-server.vercel.app/api/cart/remove/${productId}`, {
       headers: { Authorization: `Bearer ${token}` }
     });
     setCart(res.data.items);
