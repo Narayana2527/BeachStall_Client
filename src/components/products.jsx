@@ -1,20 +1,17 @@
-import React,{useContext} from 'react';
+import React, { useContext } from 'react';
 import { CartContext } from '../context/CartContext';
 import { ShoppingBag, Plus } from 'lucide-react';
 
 export default function Items({ title, products }) {
   const { addToCart } = useContext(CartContext);
-  
-  // Define your server base URL
-  const API_BASE_URL = "https://beachstall-server.vercel.app/";
 
   const handleAddToCart = (product) => {
-    
     const productData = {
       productId: product._id,
       name: product.name,
       price: product.price,
-      image: product.image,
+      // Pass the Cloudinary URL directly to the cart
+      image: product.image, 
       quantity: 1
     };
     addToCart(productData);
@@ -38,8 +35,11 @@ export default function Items({ title, products }) {
         {/* Product Grid */}
         <div className="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
           {products.map((product) => {
-            // FIX: Construct the full image URL and handle Windows backslashes
-            const imageUrl = `${API_BASE_URL}${product.image?.replace(/\\/g, "/")}`;
+            /** * CHANGE: Direct use of product.image.
+             * Since backend saves 'result.secure_url', 
+             * product.image is already a complete 'https://...' URL.
+             */
+            const imageUrl = product.image;
 
             return (
               <div key={product._id} className="group flex flex-col">
@@ -47,9 +47,12 @@ export default function Items({ title, products }) {
                 <div className="relative overflow-hidden rounded-2xl bg-gray-100 shadow-sm transition-all duration-500 group-hover:shadow-xl">
                   <img
                     alt={product.name}
-                    src={imageUrl} // Updated Source
+                    src={imageUrl} 
                     className="aspect-[4/5] w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    onError={(e) => { e.target.src = "https://via.placeholder.com/400x500?text=No+Image"; }}
+                    // Fallback in case of a broken Cloudinary link
+                    onError={(e) => { 
+                      e.target.src = "https://via.placeholder.com/400x500?text=No+Image"; 
+                    }}
                   />
                   
                   {/* Floating Price Tag */}
@@ -72,7 +75,7 @@ export default function Items({ title, products }) {
                     {product.name}
                   </h3>
                   <p className="mt-2 text-sm text-gray-500 italic leading-relaxed">
-                    {product.description || `Authentic spices blended with premium coastal flavors.`}
+                    {product.description || `Authentic coastal flavors prepared with care.`}
                   </p>
                   
                   {/* Mobile Add to Cart */}

@@ -9,9 +9,6 @@ const CartPage = () => {
   const { isLoggedIn } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // Define base URL for images
-  const API_BASE_URL = "https://beachstall-server.vercel.app/";
-
   useEffect(() => {
     if (isLoggedIn) fetchCart();
   }, [isLoggedIn]);
@@ -25,7 +22,7 @@ const CartPage = () => {
       productId: item.productId,
       name: item.name,
       price: item.price,
-      image: item.image,
+      image: item.image, // Still passing the Cloudinary URL
       quantity: delta
     });
   };
@@ -68,8 +65,8 @@ const CartPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-8 space-y-6">
             {cart.map((item) => {
-              // Construct full image URL
-              const imageUrl = `${API_BASE_URL}${item.image?.replace(/\\/g, "/")}`;
+              // FIX: Direct use of item.image as it is now a Cloudinary URL
+              const imageUrl = item.image;
 
               return (
                 <div key={item.productId} className="bg-white rounded-[2rem] p-5 flex items-center shadow-sm hover:shadow-md transition-shadow border border-gray-100">
