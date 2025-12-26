@@ -1,5 +1,5 @@
 import { Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
-import { Bars3Icon, XMarkIcon, UserCircleIcon, ShoppingCartIcon } from '@heroicons/react/24/outline'
+import { Bars3Icon, XMarkIcon, UserCircleIcon } from '@heroicons/react/24/outline'
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
@@ -11,7 +11,6 @@ const navigation = [
   { name: 'Menu', href: '/menu' },
   { name: 'Reservations', href: '/booktable' },
   { name: 'Contact', href: '/contact' },
-  // { name: 'Cart', href: '/cart' },
 ]
 
 export default function Navbar() {
@@ -26,39 +25,42 @@ export default function Navbar() {
 
   return (
     <Disclosure as="nav" className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm">
-      {({ open }) => (
+      {({ open, close }) => ( // Added 'close' from render props
         <>
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="relative flex h-20 items-center justify-between">
               
-              {/* Mobile Menu Button (Left) */}
+              {/* Left: Mobile Menu Button */}
               <div className="flex items-center sm:hidden">
-                <DisclosureButton className="inline-flex items-center justify-center rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
+                <DisclosureButton className="inline-flex items-center justify-center rounded-xl p-2 text-gray-500 hover:bg-gray-100 focus:outline-none transition-all">
                   <span className="sr-only">Open main menu</span>
                   {open ? (
-                    <XMarkIcon className="block h-7 w-7" aria-hidden="true" />
+                    <XMarkIcon className="block h-6 w-6" aria-hidden="true" />
                   ) : (
-                    <Bars3Icon className="block h-7 w-7" aria-hidden="true" />
+                    <Bars3Icon className="block h-6 w-6" aria-hidden="true" />
                   )}
                 </DisclosureButton>
               </div>
 
-              {/* Logo (Centered on mobile, Left on desktop) */}
+              {/* Center: Logo */}
               <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
                 <div className="flex shrink-0 items-center">
-                  <span className="text-2xl font-black tracking-tight text-indigo-600 cursor-pointer" onClick={() => navigate('/')}>
+                  <span 
+                    className="text-xl font-black tracking-tighter text-indigo-600 cursor-pointer" 
+                    onClick={() => { navigate('/'); close(); }}
+                  >
                     BEACH STALL
                   </span>
                 </div>
-                {/* Desktop Navigation */}
-                <div className="hidden sm:ml-10 sm:flex sm:space-x-4">
+                {/* Desktop Nav */}
+                <div className="hidden sm:ml-10 sm:flex sm:items-center sm:space-x-8">
                   {navigation.map((item) => (
                     <NavLink
                       key={item.name}
                       to={item.href}
                       className={({ isActive }) =>
-                        `px-3 py-2 text-sm font-medium transition-colors ${
-                          isActive ? 'text-indigo-600' : 'text-gray-600 hover:text-indigo-500'
+                        `text-sm font-semibold transition-all ${
+                          isActive ? 'text-indigo-600' : 'text-gray-500 hover:text-indigo-500'
                         }`
                       }
                     >
@@ -68,46 +70,60 @@ export default function Navbar() {
                 </div>
               </div>
 
-              {/* Right Section: Cart + Auth */}
-              <div className="flex items-center space-x-2 sm:space-x-6">            
-                
-                <NavLink to="/cart" className="relative p-2 text-gray-600 hover:text-indigo-600 transition-colors">
-                   <CartBadge /> {/* Ensure CartBadge component handles the icon or wrap it here */}
+              {/* Right Section: Action Group (Cart + User) */}
+              <div className="flex items-center space-x-1 sm:space-x-4">
+                {/* Cart Badge - Always visible beside user */}
+                <NavLink 
+                  to="/cart" 
+                  onClick={() => close()} 
+                  className="p-2 text-gray-500 hover:text-indigo-600 transition-colors"
+                >
+                  <CartBadge />
                 </NavLink>
 
-                {/* Desktop Auth Logic */}
-                <div className="hidden sm:flex sm:items-center sm:space-x-4">
+                {/* Auth Logic */}
+                <div className="flex items-center">
                   {!isLoggedIn ? (
-                    <>
-                      <NavLink to="/login" className="text-sm font-semibold text-gray-700 hover:text-indigo-600">Login</NavLink>
-                      <NavLink to="/signup" className="rounded-full bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition-all">
-                        Get Started
+                    <div className="hidden sm:flex items-center space-x-4">
+                      <NavLink to="/login" className="text-sm font-bold text-gray-700 hover:text-indigo-600">Login</NavLink>
+                      <NavLink to="/signup" className="rounded-full bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95">
+                        Join
                       </NavLink>
-                    </>
+                    </div>
                   ) : (
-                    <Menu as="div" className="relative ml-3">
-                      <MenuButton className="flex items-center space-x-3 rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 p-1">
-                        <span className="hidden lg:block text-sm font-medium text-gray-700">
-                           {user?.name}
+                    <Menu as="div" className="relative ml-2">
+                      <MenuButton className="flex items-center space-x-2 rounded-full bg-gray-50 p-1 pr-3 hover:bg-gray-100 transition-all border border-transparent focus:border-indigo-200">
+                        <UserCircleIcon className="h-8 w-8 text-indigo-600" />
+                        <span className="hidden md:block text-xs font-bold text-gray-700 truncate max-w-[80px]">
+                          {user?.name?.split(' ')[0]}
                         </span>
-                        <UserCircleIcon className="h-8 w-8 text-gray-400 hover:text-indigo-600 transition-colors" />
                       </MenuButton>
-                      <MenuItems className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-xl bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none">
-                        <div className="px-4 py-2 border-b border-gray-50">
-                            <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">{user?.role}</p>
+                      <MenuItems className="absolute right-0 z-50 mt-3 w-56 origin-top-right rounded-2xl bg-white p-2 shadow-2xl ring-1 ring-black/5 focus:outline-none border border-gray-100">
+                        <div className="px-3 py-3 mb-2 bg-indigo-50 rounded-xl">
+                          <p className="text-[10px] text-indigo-400 uppercase font-black tracking-widest leading-none mb-1">{user?.role}</p>
+                          <p className="text-sm font-bold text-gray-800 truncate">{user?.name}</p>
                         </div>
                         <MenuItem>
-                          <NavLink to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Profile</NavLink>
+                          {({ active }) => (
+                            <NavLink to="/profile" onClick={() => close()} className={`flex w-full items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${active ? 'bg-gray-50 text-indigo-600' : 'text-gray-700'}`}>
+                              My Profile
+                            </NavLink>
+                          )}
                         </MenuItem>
                         <MenuItem>
-                          <NavLink to="/profile/orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Orders</NavLink>
+                          {({ active }) => (
+                            <NavLink to="/profile/orders" onClick={() => close()} className={`flex w-full items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${active ? 'bg-gray-50 text-indigo-600' : 'text-gray-700'}`}>
+                              My Orders
+                            </NavLink>
+                          )}
                         </MenuItem>
-                        {/* <MenuItem>
-                          <NavLink to={user?.role === 'admin' ? '/admin-dashboard' : '/user-dashboard'} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Orders</NavLink>
-                        </MenuItem> */}
-                        <hr className="my-1 border-gray-100" />
+                        <div className="my-2 border-t border-gray-100" />
                         <MenuItem>
-                          <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Sign out</button>
+                          {({ active }) => (
+                            <button onClick={() => { handleLogout(); close(); }} className={`flex w-full items-center px-3 py-2 text-sm font-bold rounded-lg text-red-600 ${active ? 'bg-red-50' : ''}`}>
+                              Sign out
+                            </button>
+                          )}
                         </MenuItem>
                       </MenuItems>
                     </Menu>
@@ -118,38 +134,31 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Panel */}
-          <DisclosurePanel className="sm:hidden bg-white border-t border-gray-100">
-            <div className="space-y-1 px-4 pt-2 pb-3">
+          <DisclosurePanel className="sm:hidden overflow-hidden transition-all duration-300 ease-in-out bg-white">
+            <div className="space-y-1 px-4 pt-2 pb-6 border-t border-gray-50">
               {navigation.map((item) => (
                 <DisclosureButton 
                   key={item.name} 
                   as={NavLink} 
                   to={item.href} 
-                  className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-indigo-600"
+                  className={({ isActive }) => 
+                    `block rounded-xl px-4 py-3 text-base font-bold transition-all ${
+                      isActive ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 active:bg-gray-50'
+                    }`
+                  }
                 >
                   {item.name}
                 </DisclosureButton>
               ))}
-            </div>
-            
-            <div className="border-t border-gray-200 pb-3 pt-4 px-4">
-              {!isLoggedIn ? (
-                <div className="space-y-2">
-                  <DisclosureButton as={NavLink} to="/login" className="block w-full text-center py-2 text-base font-medium text-gray-700">Login</DisclosureButton>
-                  <DisclosureButton as={NavLink} to="/signup" className="block w-full text-center py-3 bg-indigo-600 text-white rounded-xl font-bold">Sign Up</DisclosureButton>
-                </div>
-              ) : (
-                <div className="space-y-1">
-                  <div className="flex items-center px-3 mb-3">
-                    <UserCircleIcon className="h-10 w-10 text-gray-400" />
-                    <div className="ml-3">
-                      <div className="text-base font-medium text-gray-800">{user?.name}</div>
-                      <div className="text-sm font-medium text-gray-500">{user?.role}</div>
-                    </div>
-                  </div>
-                  <DisclosureButton as={NavLink} to="/profile" className="block rounded-md px-3 py-2 text-base font-medium text-gray-600">My Profile</DisclosureButton>
-                  <DisclosureButton as={NavLink} to={user?.role === 'admin' ? '/admin-dashboard' : '/user-dashboard'} className="block rounded-md px-3 py-2 text-base font-medium text-gray-600">Dashboard</DisclosureButton>
-                  <button onClick={handleLogout} className="block w-full text-left rounded-md px-3 py-2 text-base font-medium text-red-600">Sign Out</button>
+              
+              {!isLoggedIn && (
+                <div className="grid grid-cols-2 gap-3 mt-6 pt-6 border-t border-gray-100">
+                  <DisclosureButton as={NavLink} to="/login" className="flex items-center justify-center rounded-xl py-3 text-sm font-bold text-gray-700 bg-gray-50">
+                    Login
+                  </DisclosureButton>
+                  <DisclosureButton as={NavLink} to="/signup" className="flex items-center justify-center rounded-xl py-3 text-sm font-bold text-white bg-indigo-600 shadow-md shadow-indigo-100">
+                    Sign Up
+                  </DisclosureButton>
                 </div>
               )}
             </div>

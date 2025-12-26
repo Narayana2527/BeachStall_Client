@@ -18,6 +18,7 @@ import { AuthProvider } from "./context/AuthContext";
 import {CartProvider} from './context/CartContext'
 import PaymentPage from "./pages/payment";
 import OrderHistory from "./pages/OrderPage";
+import ScrollToTop from "./components/ScrollToTop";
 
 
 function App() {
@@ -26,7 +27,8 @@ function App() {
   return (
     <AuthProvider>
       <CartProvider>
-        <Router>      
+        <Router> 
+          <ScrollToTop />     
           <Navbar />
           <Routes>
             <Route path="/signup" element={<Signup />} />
