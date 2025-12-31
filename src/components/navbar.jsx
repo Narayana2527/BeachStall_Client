@@ -102,6 +102,13 @@ export default function Navbar() {
                             </NavLink>
                           )}
                         </MenuItem>
+                        <MenuItem>
+                          {({ active }) => (
+                            <NavLink to="/profile/orders" onClick={() => close()} className={`flex w-full px-3 py-2 text-sm font-medium rounded-lg ${active ? 'bg-gray-50 text-indigo-600' : 'text-gray-700'}`}>
+                              My Orders
+                            </NavLink>
+                          )}
+                        </MenuItem>
                         <div className="my-2 border-t border-gray-100" />
                         <MenuItem>
                           {({ active }) => (
