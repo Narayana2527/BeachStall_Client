@@ -31,7 +31,7 @@ const BookingForm = () => {
           Authorization: `Bearer ${token}`,
         },
       };
-      await axios.post('https://beachstall-server.vercel.app/api/bookings', bookingData,config);
+      await axios.post('https://beach-stall-server-gezy.vercel.app/api/bookings', bookingData,config);
       
       // Success Alert
       Swal.fire({

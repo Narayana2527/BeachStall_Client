@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
 
     try {
       // Fetching fresh data from MongoDB via your Backend
-      const res = await axios.get('https://beachstall-server.vercel.app/api/auth/me', {
+      const res = await axios.get('https://beach-stall-server-gezy.vercel.app/api/auth/me', {
         headers: { Authorization: `Bearer ${token}` }
       });
       

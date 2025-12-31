@@ -24,7 +24,7 @@ export default function Login() {
 
     try {
       // 3. Use 'credentials' to match your state variable
-      const res = await axios.post('https://beachstall-server.vercel.app/api/user/login', credentials);
+      const res = await axios.post('https://beach-stall-server-gezy.vercel.app/api/user/login', credentials);
       
       if (res.data.token) {
         localStorage.setItem('token', res.data.token);
