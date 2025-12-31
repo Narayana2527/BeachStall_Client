@@ -1,78 +1,126 @@
 import React from 'react';
 import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin } from 'react-icons/fa';
+import { Send } from 'lucide-react'; // More modern icon set
 
-// Define the navigation links and social icons
 const footerNavs = [
-  { label: 'Company', 
-    items: [{name:'About Us', href:"/about"}, {name:'Menu', href:'/menu'}, {name:'Book A table', href:"/booktable"},
-            {name:'Contact', href:"/contact"}
-    ] },
-  { label: 'Support', items: ['Help Center', 'Terms of Service', 'Privacy Policy'] },
-  { label: 'Resources', items: ['Blog', 'Guides', 'FAQs'] },
+  { 
+    label: 'Explore', 
+    items: [
+      { name: 'About Our Story', href: "/about" }, 
+      { name: 'Fresh Menu', href: '/menu' }, 
+      { name: 'Reserve a Table', href: "/booktable" },
+      { name: 'Contact Us', href: "/contact" }
+    ] 
+  },
+  { 
+    label: 'Support', 
+    items: [
+      { name: 'Help Center', href: "#" }, 
+      { name: 'Terms of Service', href: "#" }, 
+      { name: 'Privacy Policy', href: "#" }
+    ] 
+  },
+  { 
+    label: 'Resources', 
+    items: [
+      { name: 'Coastal Blog', href: "#" }, 
+      { name: 'Cooking Guides', href: "#" }, 
+      { name: 'FAQs', href: "#" }
+    ] 
+  },
 ];
 
 const socialIcons = [
-  { icon: FaFacebook, href: '#' },
-  { icon: FaTwitter, href: '#' },
-  { icon: FaInstagram, href: '#' },
-  { icon: FaLinkedin, href: '#' },
+  { icon: FaFacebook, href: '#', label: 'Facebook' },
+  { icon: FaTwitter, href: '#', label: 'Twitter' },
+  { icon: FaInstagram, href: '#', label: 'Instagram' },
+  { icon: FaLinkedin, href: '#', label: 'Linkedin' },
 ];
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-900 text-white border-t border-gray-700">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-6 lg:grid-cols-12">
+    <footer className="relative bg-[#05080a] text-white pt-24 pb-12 overflow-hidden">
+      {/* Decorative Background Glow */}
+      <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none" />
+      
+      <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 mb-16">
           
-          {/* 🚀 Brand/Logo Section (Col 1-3 on large screens) */}
-          <div className="col-span-2 md:col-span-6 lg:col-span-3">
-            <h3 className="text-3xl font-bold text-indigo-400">Beach Stall</h3>
-            <p className="mt-4 text-gray-400 text-sm max-w-xs">
-              Bringing the taste of the coast right to your table, every single day.
-            </p>
+          {/* 🚀 Brand Section & Newsletter */}
+          <div className="lg:col-span-5 space-y-8">
+            <div>
+              <h3 className="text-4xl font-serif italic font-bold tracking-tight text-white">
+                Beach <span className="text-indigo-400">Stall.</span>
+              </h3>
+              <p className="mt-4 text-gray-400 text-lg leading-relaxed max-w-md">
+                Experience the authentic taste of the coast. We bring fresh, 
+                chef-crafted seafood directly from the docks to your table.
+              </p>
+            </div>
+
+            {/* Newsletter Input */}
+            <div className="max-w-sm">
+              <label className="text-sm font-semibold uppercase tracking-widest text-gray-300 mb-3 block">
+                Join the Voyage
+              </label>
+              <div className="relative flex items-center">
+                <input 
+                  type="email" 
+                  placeholder="Enter your email" 
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-6 pr-16 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
+                />
+                <button className="absolute right-2 p-2.5 bg-indigo-500 hover:bg-indigo-400 rounded-xl transition-colors shadow-lg shadow-indigo-500/20">
+                  <Send size={20} className="text-white" />
+                </button>
+              </div>
+            </div>
           </div>
 
-          {/* 🔗 Navigation Links (Col 4-12 on large screens) */}
-          {footerNavs.map((section, index) => (
-            <div key={index} className="col-span-1 md:col-span-2 lg:col-span-3">
-              <h4 className="text-lg font-semibold mb-4 text-white">{section.label}</h4>
-              <ul className="space-y-3">
-                {section.items.map((item, itemIndex) => (
-                  <li key={itemIndex}>
-                    <a 
-                      href={item.href} 
-                      className="text-gray-400 hover:text-indigo-400 transition duration-150 ease-in-out text-base"
-                    >
-                      {item.name}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-
+          {/* 🔗 Links Sections */}
+          <div className="lg:col-span-7 grid grid-cols-2 sm:grid-cols-3 gap-8">
+            {footerNavs.map((section, index) => (
+              <div key={index}>
+                <h4 className="text-sm font-black uppercase tracking-[0.2em] text-indigo-400 mb-6">
+                  {section.label}
+                </h4>
+                <ul className="space-y-4">
+                  {section.items.map((item, itemIndex) => (
+                    <li key={itemIndex}>
+                      <a 
+                        href={item.href} 
+                        className="text-gray-400 hover:text-white transition-colors duration-200 text-base flex items-center group"
+                      >
+                        <span className="w-0 group-hover:w-2 h-[2px] bg-indigo-400 mr-0 group-hover:mr-2 transition-all duration-300" />
+                        {item.name}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-gray-700 flex flex-col items-center justify-between sm:flex-row">
+        {/* 📱 Bottom Bar */}
+        <div className="pt-8 border-t border-white/5 flex flex-col items-center justify-between gap-6 sm:flex-row">
           
-          {/* © Copyright Notice */}
-          <p className="text-sm text-gray-400 order-2 sm:order-1 mt-4 sm:mt-0">
-            &copy; {new Date().getFullYear()} Beach Stall. All rights reserved.
-          </p>
-          
-          {/* 📱 Social Media Icons */}
-          <div className="flex space-x-6 order-1 sm:order-2">
+          <div className="flex space-x-4 order-1 sm:order-2">
             {socialIcons.map((social, index) => (
               <a 
                 key={index} 
                 href={social.href} 
-                className="text-gray-400 hover:text-indigo-400 transition duration-150 ease-in-out"
-                aria-label={social.icon.name}
+                className="p-3 bg-white/5 hover:bg-indigo-500 rounded-2xl text-gray-400 hover:text-white transition-all duration-300 transform hover:-translate-y-1 shadow-xl"
+                aria-label={social.label}
               >
-                <social.icon className="h-6 w-6" />
+                <social.icon className="h-5 w-5" />
               </a>
             ))}
           </div>
+
+          <p className="text-sm text-gray-500 order-2 sm:order-1 font-medium">
+            &copy; {new Date().getFullYear()} Beach Stall. Crafted for Coastal Lovers.
+          </p>
+          
         </div>
       </div>
     </footer>
