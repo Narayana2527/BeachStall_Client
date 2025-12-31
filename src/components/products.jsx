@@ -16,11 +16,6 @@ export default function Items({ title, products }) {
     addToCart(productData);
   };
 
-  /**
-   * ADVANCED FLOW-CURVE DESIGN:
-   * Instead of simple circles, we use multi-layered linear gradients 
-   * tilted at specific angles to create a "S-Curve" illusion.
-   */
   const flowBgStyle = {
     backgroundColor: '#ffffff',
     backgroundImage: `
@@ -31,7 +26,7 @@ export default function Items({ title, products }) {
   };
 
   return (
-    <div className="bg-[#fcfaf8] py-16 overflow-hidden">
+    <div className="md:bg-[#fcfaf8] lg:bg-[#fcfaf8] bg-[#755b7e] py-16 overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         
         {/* Modern Header */}
@@ -116,7 +111,7 @@ export default function Items({ title, products }) {
                   <div className="absolute inset-0 bg-orange-500 translate-y-full transition-transform duration-300 group-hover/btn:translate-y-0" />
                   <div className="relative flex items-center justify-center gap-3 py-4 text-sm font-bold text-white uppercase tracking-tighter">
                     <ShoppingBag size={18} />
-                    <span>Add to Experience</span>
+                    <span>Add to Cart</span>
                   </div>
                 </button>
               </div>
