@@ -82,7 +82,7 @@ export default function Navbar() {
 
                 {!isLoggedIn ? (
                   <button onClick={() => navigate('/login')} className="px-6 py-2.5 bg-gray-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-indigo-600 transition-all shadow-lg">
-                    Join VIP
+                    Join
                   </button>
                 ) : (
                   <Menu as="div" className="relative">
