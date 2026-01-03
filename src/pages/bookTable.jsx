@@ -1,208 +1,220 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import DatePicker from 'react-datepicker';
 import axios from 'axios';
 import Swal from 'sweetalert2';
-import { Calendar, Loader2, ClipboardCheck, Phone, ChevronRight, ListTree } from 'lucide-react';
+import { Loader2, Phone, ChevronRight, ClipboardCheck, AlertCircle } from 'lucide-react';
 import "react-datepicker/dist/react-datepicker.css";
 
+// 1. Define Validation Schema with Zod
+const bookingSchema = z.object({
+  phone: z.string()
+    .min(10, "Phone number must be at least 10 digits")
+    .max(15, "Phone number is too long")
+    .regex(/^[0-9+]+$/, "Invalid phone format"),
+  eventDate: z.date({
+    required_error: "Please select a date and time",
+    invalid_type_error: "That's not a valid date!",
+  }),
+  category: z.enum(['Wedding', 'Table Booking'], {
+    error_map: () => ({ message: "Please select an event type" })
+  }),
+  subCategory: z.string().min(1, "Please select a service/zone"),
+  nestedOption: z.string().min(1, "Please select a specific choice"),
+  customNotes: z.string().max(500, "Notes cannot exceed 500 characters").optional(),
+});
+
 const BookingForm = () => {
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [isLoading, setIsLoading] = useState(false);
-  
-  // State to manage nested selections
-  const [formData, setFormData] = useState({
-    phone: '',
-    category: '', // Level 1
-    subCategory: '', // Level 2
-    nestedOption: '', // Level 3
-    customNotes: ''
+  // 2. Initialize React Hook Form
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting }
+  } = useForm({
+    resolver: zodResolver(bookingSchema),
+    defaultValues: {
+      phone: '',
+      category: '',
+      subCategory: '',
+      nestedOption: '',
+      customNotes: '',
+      eventDate: new Date()
+    }
   });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    const token = localStorage.getItem('token');
+  // Watch fields to reset dependent fields
+  const watchCategory = watch("category");
+  const watchSubCategory = watch("subCategory");
 
+  const onSubmit = async (data) => {
+    const token = localStorage.getItem('token');
     const bookingData = {
-      ...formData,
-      eventDate: selectedDate.toISOString(),
+      phone: data.phone,
+      category: data.category,
+      eventDate: data.eventDate.toISOString(),
       details: {
-        subCategory: formData.subCategory,
-        nestedOption: formData.nestedOption,
-        customNotes: formData.customNotes
+        subCategory: data.subCategory,
+        nestedOption: data.nestedOption,
+        customNotes: data.customNotes
       }
     };
 
     try {
       const config = { headers: { Authorization: `Bearer ${token}` } };
       await axios.post('https://beach-stall-server-gezy.vercel.app/api/bookings', bookingData, config);
-      
-      Swal.fire({ title: 'Reserved!', text: 'Your tiered booking is successful.', icon: 'success' });
-      setFormData({ phone: '', category: '', subCategory: '', nestedOption: '', customNotes: '' });
+      Swal.fire({ title: 'Reserved!', text: 'Your booking is successful.', icon: 'success' });
     } catch (error) {
-      Swal.fire({ title: 'Error', text: 'Something went wrong.', icon: 'error' });
-    } finally {
-      setIsLoading(false);
+      Swal.fire({ title: 'Error', text: error.response?.data?.message || 'Something went wrong.', icon: 'error' });
     }
   };
 
-  // Helper to reset lower levels when a higher level changes
-  const handleCategoryChange = (val) => {
-    setFormData({ ...formData, category: val, subCategory: '', nestedOption: '' });
-  };
-
-  const handleSubCategoryChange = (val) => {
-    setFormData({ ...formData, subCategory: val, nestedOption: '' });
-  };
+  // Helper component for Error Messages
+  const ErrorMsg = ({ name }) => (
+    errors[name] ? (
+      <p className="text-red-500 text-[10px] font-bold mt-1 flex items-center gap-1 animate-in fade-in slide-in-from-top-1">
+        <AlertCircle size={10} /> {errors[name].message}
+      </p>
+    ) : null
+  );
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 selection:bg-indigo-100">
-      <div className="w-full max-w-xl bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] overflow-hidden border border-gray-100">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-gray-100">
         
-        {/* Header Section */}
         <div className="bg-indigo-600 p-8 text-white relative">
-          <div className="absolute top-0 right-0 p-8 opacity-10">
-            <ClipboardCheck size={120} />
-          </div>
-          <div className="relative z-10">
-            <h2 className="text-3xl font-extrabold tracking-tight">Reserve Your Slot</h2>
-            <p className="text-indigo-100 mt-2 font-medium">Precision booking for your special events.</p>
+          <div className="relative z-10 text-center">
+            <h2 className="text-3xl font-black tracking-tight">VIP Reservation</h2>
+            <p className="text-indigo-100 mt-1 font-medium text-sm">Validating your preferences in real-time.</p>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8 space-y-8">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-8 space-y-6">
           
-          {/* Section: Contact & Time */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold text-indigo-600 uppercase tracking-widest px-1">Call-back Number</label>
-              <div className="relative group">
-                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
+            {/* Phone Input */}
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest px-1">Contact Phone</label>
+              <div className="relative">
+                <Phone className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${errors.phone ? 'text-red-400' : 'text-gray-400'}`} size={18} />
                 <input
-                  type="tel" required
-                  className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 outline-none transition-all text-gray-700 font-medium"
-                  placeholder="Phone Number"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  {...register("phone")}
+                  className={`w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 rounded-2xl outline-none transition-all font-medium ${errors.phone ? 'border-red-100 focus:border-red-500' : 'border-transparent focus:border-indigo-500 focus:bg-white'}`}
+                  placeholder="0123456789"
                 />
               </div>
+              <ErrorMsg name="phone" />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[11px] font-bold text-indigo-600 uppercase tracking-widest px-1">Reservation Time</label>
-              <DatePicker
-                selected={selectedDate}
-                onChange={(date) => setSelectedDate(date)}
-                showTimeSelect
-                className="w-full p-3.5 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 outline-none transition-all font-medium text-gray-700"
-                dateFormat="MMMM d, h:mm aa"
+            {/* Date Picker */}
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest px-1">Event Timing</label>
+              <Controller
+                control={control}
+                name="eventDate"
+                render={({ field }) => (
+                  <DatePicker
+                    selected={field.value}
+                    onChange={(date) => field.onChange(date)}
+                    showTimeSelect
+                    className="w-full p-3.5 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-indigo-500 outline-none transition-all font-medium"
+                    dateFormat="Pp"
+                  />
+                )}
               />
+              <ErrorMsg name="eventDate" />
             </div>
           </div>
 
-          <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
+          <hr className="opacity-50" />
 
-          {/* HIERARCHY LEVEL 1 */}
-          <div className="space-y-3">
-            <label className="flex items-center gap-2 text-[11px] font-bold text-gray-400 uppercase tracking-widest px-1">
-              <span className="w-5 h-5 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-[10px]">1</span>
-              Primary Event Type
-            </label>
+          {/* Level 1: Category */}
+          <div className="space-y-2">
+            <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest px-1">1. Select Category</label>
             <select 
-              required
-              className="w-full p-4 bg-gray-50 border-2 border-transparent rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition-all appearance-none cursor-pointer font-semibold text-gray-700"
-              value={formData.category}
-              onChange={(e) => handleCategoryChange(e.target.value)}
+              {...register("category", { onChange: () => { setValue("subCategory", ""); setValue("nestedOption", ""); } })}
+              className={`w-full p-4 bg-gray-50 border-2 rounded-2xl outline-none transition-all font-semibold ${errors.category ? 'border-red-100' : 'border-transparent focus:border-indigo-500'}`}
             >
-              <option value="">Select Category</option>
+              <option value="">Select Option</option>
               <option value="Wedding">💍 Wedding Celebration</option>
               <option value="Table Booking">🍽️ Premium Dining</option>
             </select>
+            <ErrorMsg name="category" />
           </div>
 
-          {/* HIERARCHY LEVEL 2 & 3: Conditional Group */}
-          {formData.category && (
-            <div className="space-y-6 p-6 bg-indigo-50/50 rounded-[2rem] border border-indigo-100/50 animate-in fade-in zoom-in-95 duration-300">
-              
-              {/* Level 2 Select */}
-              <div className="space-y-3">
-                <label className="flex items-center gap-2 text-[11px] font-bold text-indigo-600 uppercase tracking-widest px-1">
-                  <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px]">2</span>
-                  {formData.category === 'Wedding' ? 'Service Required' : 'Dining Zone'}
-                </label>
-                <select 
-                  required
-                  className="w-full p-4 bg-white border border-indigo-100 rounded-2xl outline-none shadow-sm font-medium"
-                  value={formData.subCategory}
-                  onChange={(e) => handleSubCategoryChange(e.target.value)}
-                >
-                  <option value="">Select Option</option>
-                  {formData.category === 'Wedding' ? (
-                    <>
-                      <option value="Catering">Gourmet Catering</option>
-                      <option value="Decor">Visual Decoration</option>
-                    </>
-                  ) : (
-                    <>
-                      <option value="Indoor">Climate Controlled Indoor</option>
-                      <option value="Outdoor">Open Air / Terrace</option>
-                    </>
-                  )}
-                </select>
-              </div>
-
-              {/* Level 3 Select */}
-              {formData.subCategory && (
-                <div className="space-y-3 animate-in slide-in-from-top-4 duration-500">
-                  <label className="flex items-center gap-2 text-[11px] font-bold text-indigo-600 uppercase tracking-widest px-1">
-                    <span className="w-5 h-5 rounded-full bg-indigo-200 text-indigo-700 flex items-center justify-center text-[10px]">3</span>
-                    Final Selection
-                  </label>
-                  <select 
-                    required
-                    className="w-full p-4 bg-white border border-indigo-200 rounded-2xl outline-none shadow-md font-medium text-indigo-900 ring-2 ring-indigo-100"
-                    value={formData.nestedOption}
-                    onChange={(e) => setFormData({...formData, nestedOption: e.target.value})}
-                  >
-                    <option value="">Choose your specific preference...</option>
-                    {/* Map choices based on subCategory */}
-                    {formData.subCategory === 'Catering' && (
-                      <>
-                        <option value="Veg-Thali">Traditional Veg Thali</option>
-                        <option value="NonVeg-Premium">Premium Non-Veg Buffet</option>
-                      </>
-                    )}
-                    {formData.subCategory === 'Outdoor' && (
-                      <>
-                        <option value="Sunset-View">Sunset View Table</option>
-                        <option value="Poolside">Private Poolside</option>
-                      </>
-                    )}
-                  </select>
-                </div>
-              )}
+          {/* Level 2: Sub-Category */}
+          {watchCategory && (
+            <div className="space-y-2 animate-in fade-in slide-in-from-left-4">
+              <label className="text-[11px] font-bold text-indigo-500 uppercase tracking-widest px-1">2. Service Type</label>
+              <select 
+                {...register("subCategory", { onChange: () => setValue("nestedOption", "") })}
+                className="w-full p-4 bg-indigo-50 border-2 border-transparent rounded-2xl outline-none focus:border-indigo-500 font-semibold"
+              >
+                <option value="">Select Service</option>
+                {watchCategory === 'Wedding' ? (
+                  <>
+                    <option value="Catering">Gourmet Catering</option>
+                    <option value="Decor">Thematic Decoration</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="Indoor">Indoor Hall</option>
+                    <option value="Outdoor">Terrace/Poolside</option>
+                  </>
+                )}
+              </select>
+              <ErrorMsg name="subCategory" />
             </div>
           )}
 
-          {/* Notes */}
+          {/* Level 3: Nested Options */}
+          {watchSubCategory && (
+            <div className="space-y-2 animate-in fade-in slide-in-from-left-6">
+              <label className="text-[11px] font-bold text-emerald-500 uppercase tracking-widest px-1">3. Specific Preference</label>
+              <select 
+                {...register("nestedOption")}
+                className="w-full p-4 bg-emerald-50 border-2 border-transparent rounded-2xl outline-none focus:border-emerald-500 font-semibold"
+              >
+                <option value="">Choose specific preference...</option>
+                {watchSubCategory === 'Catering' && (
+                  <>
+                    <option value="Veg-Thali">Veg Thali</option>
+                    <option value="Non-Veg">Premium Non-Veg</option>
+                  </>
+                )}
+                {watchSubCategory === 'Outdoor' && (
+                  <>
+                    <option value="Sea-Facing">Sea Facing</option>
+                    <option value="Garden">Garden Side</option>
+                  </>
+                )}
+              </select>
+              <ErrorMsg name="nestedOption" />
+            </div>
+          )}
+
           <div className="space-y-2">
-            <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest px-1">Specific Requests</label>
+            <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest px-1">Special Notes</label>
             <textarea 
-              rows="3"
-              className="w-full p-4 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 outline-none transition-all text-sm font-medium"
-              placeholder="Allergies, wheelchair access, or specific menu items..."
-              value={formData.customNotes}
-              onChange={(e) => setFormData({...formData, customNotes: e.target.value})}
+              {...register("customNotes")}
+              className="w-full p-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-indigo-500 outline-none transition-all text-sm font-medium"
+              placeholder="Any specific requests?"
+              rows="2"
             />
+            <ErrorMsg name="customNotes" />
           </div>
 
           <button
             type="submit"
-            disabled={isLoading || !formData.nestedOption}
-            className="w-full py-5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-200 disabled:text-gray-400 text-white rounded-[1.5rem] font-bold text-lg flex justify-center items-center gap-3 transition-all shadow-xl shadow-indigo-100 active:scale-[0.98]"
+            disabled={isSubmitting}
+            className="w-full py-5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-200 text-white rounded-[1.5rem] font-bold text-lg flex justify-center items-center gap-3 transition-all shadow-xl shadow-indigo-100"
           >
-            {isLoading ? <Loader2 className="animate-spin" size={24} /> : (
-              <>Confirm My Reservation <ChevronRight size={20} /></>
+            {isSubmitting ? <Loader2 className="animate-spin" size={24} /> : (
+              <>Complete Booking <ChevronRight size={20} /></>
             )}
           </button>
         </form>

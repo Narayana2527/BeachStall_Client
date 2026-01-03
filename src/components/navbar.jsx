@@ -38,38 +38,77 @@ export default function Navbar() {
   return (
     <>
       {/* 💻 DESKTOP NAVBAR */}
-      <nav className="hidden sm:block sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-20 items-center justify-between">
-            <div className="flex items-center">
-              <span className="text-xl font-black tracking-tighter text-indigo-600 cursor-pointer italic" onClick={() => navigate('/')}>
+      <nav className="hidden sm:block sticky top-0 z-50 bg-white/90 backdrop-blur-md  border-b border-gray-100">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="grid grid-cols-3 h-20 items-center">
+            <div className="flex justify-start">
+              {/* <span className="text-xl font-black tracking-tighter text-indigo-600 cursor-pointer italic" >
                 BEACH STALL
-              </span>
-              <div className="ml-10 flex items-center space-x-8">
+              </span> */}
+              <img 
+                src="/assets/images/BeachStall.png" // Replace with your actual path
+                alt="Beach Stall Logo"
+                onClick={() => navigate('/')}
+                style={{width:"168px", height:"80px", padding:"5px 5px"}}
+                className="object-contain transition-transform duration-300 group-hover:scale-110" 
+              />
+              {/* <div className="ml-10 flex items-center space-x-8">
                 {desktopNav.map((item) => (
                   <NavLink key={item.name} to={item.href} className={({ isActive }) => `text-sm font-bold transition-all ${isActive ? 'text-indigo-600 underline underline-offset-8 decoration-2' : 'text-gray-400 hover:text-indigo-600'}`}>
                     {item.name}
                   </NavLink>
                 ))}
-              </div>
+              </div> */}
             </div>
 
-            <div className="flex items-center space-x-4">
-              <NavLink to="/cart"><CartBadge /></NavLink>
+            <div className="flex justify-center items-center space-x-8">
+              {desktopNav.map((item) => (
+                <NavLink key={item.name} to={item.href} className={({ isActive }) => `text-sm font-bold transition-all ${isActive ? 'text-indigo-600 underline underline-offset-8 decoration-2' : 'text-gray-400 hover:text-indigo-600'}`}>
+                    {item.name}
+                  </NavLink>
+              ))}
+            </div>
+
+            {/* 3. Actions (Right) */}
+            <div className="flex justify-end items-center space-x-5">
+              <NavLink to="/cart" className="p-2 text-gray-400 hover:text-indigo-600 transition-colors">
+                <CartBadge />
+              </NavLink>
+              
               {!isLoggedIn ? (
-                <NavLink to="/login" className="rounded-full bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg hover:bg-indigo-700 transition-all">Join</NavLink>
+                <NavLink 
+                  to="/login" 
+                  className="rounded-full bg-gray-900 px-7 py-2.5 text-sm font-bold text-white hover:bg-indigo-600 shadow-sm transition-all duration-300 active:scale-95"
+                >
+                  Join
+                </NavLink>
               ) : (
-                <Menu as="div" className="relative ml-2">
-                  <MenuButton className="flex items-center rounded-full bg-gray-50 p-1"><UserCircleIcon className="h-8 w-8 text-indigo-600" /></MenuButton>
-                  <MenuItems className="absolute right-0 z-50 mt-3 w-56 rounded-2xl bg-white p-2 shadow-2xl border border-gray-100 focus:outline-none">
-                    <div className="px-3 py-3 mb-2 bg-indigo-50 rounded-xl">
-                      <p className="text-[10px] text-indigo-400 font-black uppercase tracking-widest leading-none mb-1">{user?.role || 'Customer'}</p>
-                      <p className="text-sm font-bold text-gray-800 truncate">{user?.name}</p>
+                <Menu as="div" className="relative">
+                  <MenuButton className="flex items-center rounded-full transition-all focus:ring-2 focus:ring-indigo-100">
+                    <div className="h-9 w-9 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
+                      {user?.name?.charAt(0)}
                     </div>
-                    <MenuItem>{({ active }) => <NavLink to="/profile" className={`flex w-full px-3 py-2 text-sm font-medium rounded-lg ${active ? 'bg-gray-50 text-indigo-600' : 'text-gray-700'}`}>My Profile</NavLink>}</MenuItem>
-                    <div className="my-2 border-t border-gray-100" />
-                    <MenuItem>{({ active }) => <button onClick={handleLogout} className={`flex w-full px-3 py-2 text-sm font-bold rounded-lg text-red-600 ${active ? 'bg-red-50' : ''}`}>Sign out</button>}</MenuItem>
-                  </MenuItems>
+                  </MenuButton>
+                  
+                  <Transition
+                    enter="transition duration-200 ease-out"
+                    enterFrom="transform scale-95 opacity-0 translate-y-2"
+                    enterTo="transform scale-100 opacity-100 translate-y-0"
+                    leave="transition duration-100 ease-in"
+                    leaveFrom="transform scale-100 opacity-100 translate-y-0"
+                    leaveTo="transform scale-95 opacity-0 translate-y-2"
+                  >
+                    <MenuItems className="absolute right-0 z-50 mt-4 w-64 rounded-3xl bg-white p-3 shadow-2xl border border-gray-100 focus:outline-none">
+                      <div className="px-4 py-4 mb-2 bg-gradient-to-br from-indigo-50 to-white rounded-2xl">
+                        <p className="text-[10px] text-indigo-400 font-black uppercase tracking-widest mb-1">{user?.role || 'Member'}</p>
+                        <p className="text-base font-bold text-gray-900 truncate">{user?.name}</p>
+                      </div>
+                      <MenuItem>{({ active }) => <NavLink to="/profile" className={`flex items-center gap-3 w-full px-4 py-3 text-sm font-semibold rounded-xl transition-colors ${active ? 'bg-gray-50 text-indigo-600' : 'text-gray-700'}`}><Settings size={18} /> Settings</NavLink>}</MenuItem>
+                      <MenuItem>{({ active }) => <NavLink to="/profile/orders" className={`flex items-center gap-3 w-full px-4 py-3 text-sm font-semibold rounded-xl transition-colors ${active ? 'bg-gray-50 text-indigo-600' : 'text-gray-700'}`}><Package size={18} /> My Orders</NavLink>}</MenuItem>
+                      <div className="my-2 border-t border-gray-50" />
+                      <MenuItem>{({ active }) => <button onClick={handleLogout} className={`flex items-center gap-3 w-full px-4 py-3 text-sm font-bold rounded-xl text-red-500 transition-colors ${active ? 'bg-red-50' : ''}`}><LogOut size={18} /> Sign out</button>}</MenuItem>
+                    </MenuItems>
+                  </Transition>
                 </Menu>
               )}
             </div>
@@ -79,7 +118,13 @@ export default function Navbar() {
 
       {/* 📱 MOBILE TOP BAR (Always Visible) */}
       <div className="sm:hidden sticky top-0 z-50 bg-white/80 backdrop-blur-md px-6 py-4 flex justify-center items-center border-b border-gray-50">
-        <span className="text-lg font-black tracking-tighter text-indigo-600 italic">BEACH STALL</span>
+        <img 
+                src="/assets/images/BeachStall.png" // Replace with your actual path
+                alt="Beach Stall Logo"
+                onClick={() => navigate('/')}
+                style={{width:"168px", height:"80px", padding:"5px 5px"}}
+                className="object-contain transition-transform duration-300 group-hover:scale-110 mix-blend-multiply" 
+              />
       </div>
 
       {/* 📱 MOBILE BOTTOM NAVIGATION (Hidden on Cart/Payment) */}
