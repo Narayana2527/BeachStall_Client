@@ -8,7 +8,6 @@ export default function ContactForm() {
     name: '', email: '', subject: 'General Inquiry', message: ''
   });
 
-  // High Standard Validation Logic
   const validate = () => {
     let newErrors = {};
     if (formData.name.length < 3) newErrors.name = "Name must be at least 3 characters";
@@ -43,17 +42,18 @@ export default function ContactForm() {
     }
   };
 
+  // ✅ SUCCESS STATE (Themed)
   if (status === 'success') {
     return (
-      <div className="max-w-md mx-auto my-20 p-12 bg-white rounded-[3rem] shadow-2xl border border-gray-50 text-center animate-in zoom-in duration-500">
-        <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
+      <div className="max-w-md mx-auto my-20 p-12 bg-white dark:bg-zinc-900 rounded-[3.5rem] shadow-2xl dark:shadow-none border border-gray-50 dark:border-zinc-800 text-center animate-in zoom-in duration-500 transition-colors">
+        <div className="w-24 h-24 bg-green-50 dark:bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
           <CheckCircle2 className="w-12 h-12 text-green-500" />
         </div>
-        <h2 className="text-3xl font-black text-gray-900 mb-3">Talk soon!</h2>
-        <p className="text-gray-500 leading-relaxed mb-8">We've received your inquiry. Check your inbox for a confirmation email.</p>
+        <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-3 uppercase tracking-tighter">Talk soon!</h2>
+        <p className="text-gray-500 dark:text-zinc-400 leading-relaxed mb-8">We've received your inquiry. Check your inbox for a confirmation email.</p>
         <button 
           onClick={() => { setStatus('idle'); setFormData({name:'', email:'', subject:'General Inquiry', message:''})}}
-          className="px-8 py-3 bg-gray-900 text-white rounded-full font-bold hover:bg-indigo-600 transition-all"
+          className="px-10 py-4 bg-gray-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-2xl font-black uppercase tracking-widest text-xs hover:scale-105 transition-all"
         >
           New Message
         </button>
@@ -62,30 +62,37 @@ export default function ContactForm() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto my-16 px-6 grid md:grid-cols-5 gap-12 items-start">
+    <div className="max-w-6xl mx-auto my-16 px-6 grid lg:grid-cols-5 gap-16 items-start transition-colors">
       
-      {/* Sidebar Information (Hierarchy) */}
-      <div className="md:col-span-2 space-y-8">
-        <div>
-          <h2 className="text-4xl font-black text-gray-900 tracking-tight mb-4">Let's start a conversation.</h2>
-          <p className="text-gray-500 text-lg leading-relaxed">Ask us anything about our stalls, catering, or event bookings.</p>
+      {/* 🏛️ Sidebar Information (Hierarchy) */}
+      <div className="lg:col-span-2 space-y-10">
+        <div className="space-y-4">
+          <span className="text-orange-500 font-black uppercase tracking-[0.3em] text-[10px]">Contact Us</span>
+          <h2 className="text-5xl font-black text-gray-900 dark:text-white tracking-tighter leading-[0.9]">
+            Let's start a <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-indigo-600">conversation.</span>
+          </h2>
+          <p className="text-gray-500 dark:text-zinc-400 text-lg leading-relaxed max-w-sm">
+            Ask us anything about our stalls, catering, or event bookings.
+          </p>
         </div>
         
-        <div className="space-y-6">
-          <div className="flex items-center gap-4 p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100/50">
-            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white"><Mail size={20}/></div>
+        <div className="space-y-4">
+          <div className="flex items-center gap-5 p-6 bg-white dark:bg-zinc-900/50 rounded-[2rem] border border-gray-100 dark:border-zinc-800 shadow-sm">
+            <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200 dark:shadow-none">
+              <Mail size={22}/>
+            </div>
             <div>
-              <p className="text-[10px] font-black uppercase text-indigo-400">Email Us</p>
-              <p className="font-bold text-gray-800">hello@beachstall.com</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-indigo-500 mb-0.5">Email Us</p>
+              <p className="font-black text-gray-900 dark:text-zinc-100 italic">hello@beachstall.com</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Modern Form Card */}
-      <div className="md:col-span-3 bg-white rounded-[2.5rem] p-8 md:p-10 shadow-2xl shadow-gray-200/50 border border-gray-100">
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+      {/* 📝 Modern Form Card (Themed) */}
+      <div className="lg:col-span-3 bg-white dark:bg-zinc-900 rounded-[3rem] p-8 md:p-12 shadow-2xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-zinc-800 transition-colors">
+        <form onSubmit={handleSubmit} className="space-y-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <InputField 
               label="Name" icon={<User size={18}/>} 
               error={errors.name}
@@ -107,12 +114,12 @@ export default function ContactForm() {
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-[11px] font-black uppercase tracking-widest text-gray-400 ml-1">Inquiry Type</label>
+          <div className="space-y-3">
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500 ml-1">Inquiry Type</label>
             <div className="relative group">
-              <Info className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors" size={18} />
+              <Info className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors" size={18} />
               <select 
-                className="w-full pl-12 pr-4 py-4 bg-gray-50/50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-50 focus:border-indigo-400 focus:bg-white outline-none transition-all appearance-none font-medium text-gray-700"
+                className="w-full pl-14 pr-6 py-5 bg-gray-50/50 dark:bg-zinc-950/50 border border-gray-100 dark:border-zinc-800 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-400 focus:bg-white dark:focus:bg-zinc-950 outline-none transition-all appearance-none font-bold text-gray-700 dark:text-zinc-300"
                 value={formData.subject}
                 onChange={(e) => setFormData({...formData, subject: e.target.value})}
               >
@@ -123,28 +130,28 @@ export default function ContactForm() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-[11px] font-black uppercase tracking-widest text-gray-400 ml-1">Message</label>
+          <div className="space-y-3">
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500 ml-1">Your Message</label>
             <div className="relative group">
-              <MessageSquare className="absolute left-4 top-4 text-gray-400 group-focus-within:text-indigo-600 transition-colors" size={18} />
+              <MessageSquare className="absolute left-5 top-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors" size={18} />
               <textarea
-                required rows="4"
+                required rows="5"
                 placeholder="Tell us more..."
-                className={`w-full pl-12 pr-4 py-4 bg-gray-50/50 border ${errors.message ? 'border-red-200 bg-red-50/20' : 'border-gray-100'} rounded-2xl focus:ring-4 focus:ring-indigo-50 focus:border-indigo-400 focus:bg-white outline-none transition-all resize-none`}
+                className={`w-full pl-14 pr-6 py-5 bg-gray-50/50 dark:bg-zinc-950/50 border ${errors.message ? 'border-red-400' : 'border-gray-100 dark:border-zinc-800'} rounded-3xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-400 focus:bg-white dark:focus:bg-zinc-950 outline-none transition-all resize-none text-gray-900 dark:text-white`}
                 value={formData.message}
                 onChange={(e) => setFormData({...formData, message: e.target.value})}
               />
-              {errors.message && <p className="text-red-500 text-[10px] font-bold mt-1 ml-2">{errors.message}</p>}
+              {errors.message && <p className="text-red-500 text-[10px] font-bold mt-2 ml-2">{errors.message}</p>}
             </div>
           </div>
 
           <button
             type="submit"
             disabled={status === 'loading'}
-            className="w-full group bg-gray-900 hover:bg-indigo-600 text-white py-5 rounded-2xl font-bold transition-all duration-300 flex items-center justify-center gap-3 shadow-xl shadow-gray-200 disabled:opacity-50"
+            className="w-full group bg-gray-900 dark:bg-zinc-100 hover:bg-indigo-600 dark:hover:bg-indigo-500 text-white dark:text-zinc-900 hover:text-white py-6 rounded-2xl font-black uppercase tracking-widest text-xs transition-all duration-300 flex items-center justify-center gap-3 shadow-xl shadow-gray-200 dark:shadow-none disabled:opacity-50"
           >
             {status === 'loading' ? 'Processing...' : status === 'error' ? 'Retry Sending' : 'Send Message'}
-            <Send size={18} className="group-hover:translate-x-1 transition-transform" />
+            <Send size={16} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
           </button>
         </form>
       </div>
@@ -152,20 +159,19 @@ export default function ContactForm() {
   );
 }
 
-// Sub-component for cleaner code
 function InputField({ label, icon, error, inputProps }) {
   return (
-    <div className="space-y-2">
-      <label className="text-[11px] font-black uppercase tracking-widest text-gray-400 ml-1">{label}</label>
+    <div className="space-y-3">
+      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500 ml-1">{label}</label>
       <div className="relative group">
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors">{icon}</div>
+        <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors">{icon}</div>
         <input
           {...inputProps}
-          className={`w-full pl-12 pr-4 py-4 bg-gray-50/50 border ${error ? 'border-red-200 bg-red-50/20' : 'border-gray-100'} rounded-2xl focus:ring-4 focus:ring-indigo-50 focus:border-indigo-400 focus:bg-white outline-none transition-all font-medium`}
+          className={`w-full pl-14 pr-6 py-5 bg-gray-50/50 dark:bg-zinc-950/50 border ${error ? 'border-red-400' : 'border-gray-100 dark:border-zinc-800'} rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-400 focus:bg-white dark:focus:bg-zinc-950 outline-none transition-all font-bold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-600`}
         />
-        {error && <div className="absolute right-4 top-1/2 -translate-y-1/2 text-red-400"><AlertCircle size={16}/></div>}
+        {error && <div className="absolute right-5 top-1/2 -translate-y-1/2 text-red-500"><AlertCircle size={18}/></div>}
       </div>
-      {error && <p className="text-red-500 text-[10px] font-bold mt-1 ml-2">{error}</p>}
+      {error && <p className="text-red-500 text-[10px] font-bold mt-1 ml-2 tracking-tight">{error}</p>}
     </div>
   );
 }

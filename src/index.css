@@ -1,3 +1,15 @@
-
-
 @import "tailwindcss";
+
+/* This tells Tailwind v4 to look for the .dark class on the html tag */
+@variant dark (&:where(.dark, .dark *));
+
+/* Base background and text colors for the whole app */
+@layer base {
+  body {
+    @apply bg-white text-gray-900 transition-colors duration-300;
+  }
+  
+  .dark body {
+    @apply bg-zinc-950 text-white;
+  }
+}

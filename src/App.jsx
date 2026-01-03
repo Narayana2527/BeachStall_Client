@@ -28,21 +28,23 @@ function App() {
     <AuthProvider>
       <CartProvider>
         <Router> 
-          <ScrollToTop />     
-          <Navbar />
-          <Routes>
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/" element={<Home />}  />
-            <Route path="/about" element ={<About />}  />
-            <Route path="/menu"  element={<Menu />} />
-            <Route path="/booktable" element={<BookTable />}  />
-            <Route path="/contact"  element={<Contact />} />
-            <Route path="/cart"  element={<CartPage />} />
-            <Route path="/payment"  element={<PaymentPage />} />
-            <Route path="/profile/orders"  element={<OrderHistory />} />
-          </Routes>
-          <Footer />
+          <ScrollToTop />  
+          <div className="min-h-screen bg-white dark:bg-zinc-950 text-gray-900 dark:text-gray-100 transition-colors duration-300">  
+            <Navbar />
+            <Routes>
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/" element={<Home />}  />
+              <Route path="/about" element ={<About />}  />
+              <Route path="/menu"  element={<Menu />} />
+              <Route path="/booktable" element={<BookTable />}  />
+              <Route path="/contact"  element={<Contact />} />
+              <Route path="/cart"  element={<CartPage />} />
+              <Route path="/payment"  element={<PaymentPage />} />
+              <Route path="/profile/orders"  element={<OrderHistory />} />
+            </Routes>
+            <Footer />
+          </div>
         </Router>
       </CartProvider>
     </AuthProvider>

@@ -1,20 +1,25 @@
-import React, { useContext } from 'react';
-import { Menu, MenuButton, MenuItem, MenuItems, Transition } from '@headlessui/react';
-import { UserCircleIcon } from '@heroicons/react/24/outline';
-import { Home, UtensilsCrossed, CalendarDays, User, ShoppingBag, Settings, Package, LogOut } from 'lucide-react';
+import React, { useContext, useState, Fragment } from 'react';
+import { Menu, MenuButton, MenuItem, MenuItems, Transition, Dialog, DialogPanel, TransitionChild } from '@headlessui/react';
+import { 
+  Home, UtensilsCrossed, CalendarDays, User, ShoppingBag, Settings, 
+  Package, LogOut, Menu as MenuIcon, X, Info, MessageSquare, 
+  ChevronDown, Star 
+} from 'lucide-react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import CartBadge from './CartBadge';
+import ThemeToggle from './toggleTheme';
+import MobileCartBadge from './mobileCartBadge';
 
-const desktopNav = [
-  { name: 'Home', href: '/' },
-  { name: 'About', href: '/about' },
-  { name: 'Menu', href: '/menu' },
-  { name: 'Reservations', href: '/booktable' },
-  { name: 'Contact', href: '/contact' },
+const navLinks = [
+  { name: 'Home', href: '/', icon: Home },
+  { name: 'About', href: '/about', icon: Info },
+  { name: 'Menu', href: '/menu', icon: UtensilsCrossed },
+  { name: 'Reservations', href: '/booktable', icon: CalendarDays },
+  { name: 'Contact', href: '/contact', icon: MessageSquare },
 ];
 
-const mobileNav = [
+const mobileBottomNav = [
   { name: 'Home', href: '/', icon: Home },
   { name: 'Menu', href: '/menu', icon: UtensilsCrossed },
   { name: 'Book', href: '/booktable', icon: CalendarDays },
@@ -23,232 +28,198 @@ const mobileNav = [
 
 export default function Navbar() {
   const { user, setUser, isLoggedIn } = useContext(AuthContext);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Hide bottom nav on checkout-related pages to avoid overlapping buttons
   const hideBottomNav = location.pathname === '/cart' || location.pathname === '/payment';
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     setUser(null);
+    setIsSidebarOpen(false);
     navigate('/login');
   };
 
   return (
     <>
-      {/* 💻 DESKTOP NAVBAR */}
-      <nav className="hidden sm:block sticky top-0 z-50 bg-white  border-b border-gray-100">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="grid grid-cols-3 h-20 items-center">
-            <div className="flex justify-start">
-              {/* <span className="text-xl font-black tracking-tighter text-indigo-600 cursor-pointer italic" >
-                BEACH STALL
-              </span> */}
-              <img 
-                src="/assets/images/BeachStall.png" 
-                alt="Beach Stall Logo"
-                onClick={() => navigate('/')}
-                style={{width:"168px", height:"80px", padding:"5px 5px"}}
-                className="object-contain transition-transform duration-300 group-hover:scale-110" 
-              />
-              {/* <div className="ml-10 flex items-center space-x-8">
-                {desktopNav.map((item) => (
-                  <NavLink key={item.name} to={item.href} className={({ isActive }) => `text-sm font-bold transition-all ${isActive ? 'text-indigo-600 underline underline-offset-8 decoration-2' : 'text-gray-400 hover:text-indigo-600'}`}>
+      {/* 💻 TOP NAVBAR */}
+      <nav className="sticky top-0 z-50 bg-white dark:bg-zinc-950/70 backdrop-blur-xl border-b border-gray-100 dark:border-zinc-800/50 transition-colors duration-300">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="relative flex h-20 items-center justify-between">
+            
+            {/* LEFT: Mobile Menu Toggle & Desktop Logo */}
+            <div className="flex items-center gap-4">
+              <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2 text-gray-600 dark:text-gray-300">
+                <MenuIcon size={26} />
+              </button>
+
+              <div className="hidden lg:block shrink-0">
+                <img src="/assets/images/BeachStall.png" alt="Logo" onClick={() => navigate('/')} className="h-14 w-auto cursor-pointer dark:brightness-110" />
+              </div>
+
+              {/* Desktop Nav Links */}
+              <div className="hidden lg:flex items-center ml-8 space-x-1">
+                {navLinks.map((item) => (
+                  <NavLink key={item.name} to={item.href} className={({ isActive }) => `px-4 py-2 rounded-xl text-[12px] font-black uppercase tracking-widest transition-all ${isActive ? 'text-indigo-600 bg-indigo-50 dark:bg-indigo-500/10 dark:text-indigo-400' : 'text-gray-400 hover:text-gray-900 dark:text-zinc-500'}`}>
                     {item.name}
                   </NavLink>
                 ))}
-              </div> */}
+              </div>
             </div>
 
-            <div className="flex justify-center items-center space-x-8">
-              {desktopNav.map((item) => (
-                <NavLink key={item.name} to={item.href} className={({ isActive }) => `text-sm font-bold transition-all ${isActive ? 'text-indigo-600 underline underline-offset-8 decoration-2' : 'text-gray-400 hover:text-indigo-600'}`}>
-                    {item.name}
-                  </NavLink>
-              ))}
+            {/* CENTER: Mobile Logo (Now strictly visible on mobile) */}
+            <div className="lg:hidden flex items-center justify-center flex-1">
+              <img src="/assets/images/BeachStall.png" alt="Logo" onClick={() => navigate('/')} className="h-10 w-auto cursor-pointer dark:brightness-110" />
             </div>
 
-            {/* 3. Actions (Right) */}
-            <div className="flex justify-end items-center space-x-5">
-              <NavLink to="/cart" className="p-2 text-gray-400 hover:text-indigo-600 transition-colors">
-                <CartBadge />
-              </NavLink>
-              
-              {!isLoggedIn ? (
-                <NavLink 
-                  to="/login" 
-                  className="rounded-full bg-gray-900 px-7 py-2.5 text-sm font-bold text-white hover:bg-indigo-600 shadow-sm transition-all duration-300 active:scale-95"
-                >
-                  Join
+            {/* RIGHT: User & Theme */}
+            <div className="flex items-center gap-2 sm:gap-4">
+              <div className="hidden sm:flex items-center gap-3">
+                <NavLink to="/cart" className="p-2 text-gray-400 dark:text-zinc-500 hover:text-indigo-600 transition-colors">
+                  <CartBadge />
                 </NavLink>
-              ) : (
-                <Menu as="div" className="relative">
-                  <MenuButton className="flex items-center rounded-full transition-all focus:ring-2 focus:ring-indigo-100">
-                    <div className="h-9 w-9 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
-                      {user?.name?.charAt(0)}
-                    </div>
-                  </MenuButton>
-                  
-                  <Transition
-                    enter="transition duration-200 ease-out"
-                    enterFrom="transform scale-95 opacity-0 translate-y-2"
-                    enterTo="transform scale-100 opacity-100 translate-y-0"
-                    leave="transition duration-100 ease-in"
-                    leaveFrom="transform scale-100 opacity-100 translate-y-0"
-                    leaveTo="transform scale-95 opacity-0 translate-y-2"
-                  >
-                    <MenuItems className="absolute right-0 z-50 mt-4 w-64 rounded-3xl bg-white p-3 shadow-2xl border border-gray-100 focus:outline-none">
-                      <div className="px-4 py-4 mb-2 bg-gradient-to-br from-indigo-50 to-white rounded-2xl">
-                        <p className="text-[10px] text-indigo-400 font-black uppercase tracking-widest mb-1">{user?.role || 'Member'}</p>
-                        <p className="text-base font-bold text-gray-900 truncate">{user?.name}</p>
+
+                {!isLoggedIn ? (
+                  <button onClick={() => navigate('/login')} className="px-6 py-2.5 bg-gray-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-indigo-600 transition-all shadow-lg">
+                    Join VIP
+                  </button>
+                ) : (
+                  <Menu as="div" className="relative">
+                    <MenuButton className="flex items-center gap-3 group px-2 py-1.5 rounded-2xl hover:bg-gray-50 dark:hover:bg-zinc-900 transition-all">
+                      <div className="hidden md:flex flex-col items-end mr-1">
+                        <span className="text-[9px] font-black uppercase tracking-tighter text-indigo-500">{user?.role || 'Premium Member'}</span>
+                        <span className="text-sm font-bold text-gray-900 dark:text-white leading-tight">{user?.name}</span>
                       </div>
-                      <MenuItem>{({ active }) => <NavLink to="/profile" className={`flex items-center gap-3 w-full px-4 py-3 text-sm font-semibold rounded-xl transition-colors ${active ? 'bg-gray-50 text-indigo-600' : 'text-gray-700'}`}><Settings size={18} /> Settings</NavLink>}</MenuItem>
-                      <MenuItem>{({ active }) => <NavLink to="/profile/orders" className={`flex items-center gap-3 w-full px-4 py-3 text-sm font-semibold rounded-xl transition-colors ${active ? 'bg-gray-50 text-indigo-600' : 'text-gray-700'}`}><Package size={18} /> My Orders</NavLink>}</MenuItem>
-                      <div className="my-2 border-t border-gray-50" />
-                      <MenuItem>{({ active }) => <button onClick={handleLogout} className={`flex items-center gap-3 w-full px-4 py-3 text-sm font-bold rounded-xl text-red-500 transition-colors ${active ? 'bg-red-50' : ''}`}><LogOut size={18} /> Sign out</button>}</MenuItem>
-                    </MenuItems>
-                  </Transition>
-                </Menu>
-              )}
+                      <div className="h-10 w-10 rounded-2xl bg-indigo-600 flex items-center justify-center text-white font-black text-sm shadow-xl shadow-indigo-500/20 rotate-3 group-hover:rotate-0 transition-all">
+                        {user?.name?.charAt(0)}
+                      </div>
+                      <ChevronDown size={14} className="text-gray-400" />
+                    </MenuButton>
+
+                    <Transition as={Fragment} enter="transition duration-200" enterFrom="transform scale-95 opacity-0 translate-y-2" enterTo="transform scale-100 opacity-100 translate-y-0">
+                      <MenuItems className="absolute right-0 mt-4 w-72 rounded-[2.5rem] bg-white dark:bg-zinc-900 p-3 shadow-2xl border border-gray-100 dark:border-zinc-800">
+                        <div className="px-5 py-5 mb-3 bg-indigo-600 rounded-[2rem] text-white overflow-hidden relative">
+                           <Star size={60} className="absolute -right-4 -bottom-4 opacity-20 rotate-12" />
+                           <p className="text-[9px] font-black uppercase tracking-[0.2em] opacity-80 mb-1">Authenticated</p>
+                           <p className="text-lg font-black tracking-tight truncate">{user?.name}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <DropdownLink icon={User} label="My Profile" onClick={() => navigate('/profile')} />
+                          <DropdownLink icon={Package} label="My Orders" onClick={() => navigate('/profile/orders')} />
+                          <DropdownLink icon={CalendarDays} label="My Bookings" onClick={() => navigate('/bookings')} />
+                          <div className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2 mx-4" />
+                          <button onClick={handleLogout} className="flex items-center gap-3 w-full px-5 py-4 text-[11px] font-black uppercase text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-2xl">
+                            <LogOut size={18} /> Sign Out
+                          </button>
+                        </div>
+                      </MenuItems>
+                    </Transition>
+                  </Menu>
+                )}
+              </div>
+              <div className="pl-2 border-l border-gray-100 dark:border-zinc-800 ml-1">
+                <ThemeToggle />
+              </div>
             </div>
           </div>
         </div>
       </nav>
 
-      {/* 📱 MOBILE TOP BAR (Always Visible) */}
-      <div className="sm:hidden sticky top-0 z-50 bg-white px-6 py-4 flex justify-center items-center border-b border-gray-50">
-        <img 
-                src="/assets/images/BeachStall.png" // Replace with your actual path
-                alt="Beach Stall Logo"
-                onClick={() => navigate('/')}
-                style={{width:"168px", height:"80px", padding:"5px 5px"}}
-                className="object-contain transition-transform duration-300 group-hover:scale-110 mix-blend-multiply" 
-              />
-      </div>
+      {/* 🚀 SIDEBAR (OFF-CANVAS) */}
+      <Transition show={isSidebarOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-[100] lg:hidden" onClose={setIsSidebarOpen}>
+          <TransitionChild as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-200">
+            <div className="fixed inset-0 bg-zinc-950/60 backdrop-blur-sm" />
+          </TransitionChild>
+          <div className="fixed inset-0 flex">
+            <TransitionChild as={Fragment} enter="transform transition ease-in-out duration-300" enterFrom="-translate-x-full" enterTo="translate-x-0" leave="transform transition ease-in-out duration-300" leaveFrom="translate-x-0" leaveTo="-translate-x-full">
+              <DialogPanel className="relative flex w-full max-w-xs flex-col bg-white dark:bg-zinc-950 shadow-2xl">
+                <div className="flex px-6 py-8 items-center justify-between border-b dark:border-zinc-800">
+                  <img src="/assets/images/BeachStall.png" alt="Logo" className="h-10 w-auto dark:brightness-110" />
+                  <button onClick={() => setIsSidebarOpen(false)} className="p-3 text-gray-400 bg-gray-50 dark:bg-zinc-900 rounded-2xl"><X size={24} /></button>
+                </div>
+                <div className="mt-4 px-4 space-y-2">
+                  {navLinks.map((item) => (
+                    <NavLink key={item.name} to={item.href} onClick={() => setIsSidebarOpen(false)} className={({ isActive }) => `flex items-center gap-4 px-6 py-4 rounded-3xl font-black text-xs uppercase tracking-widest transition-all ${isActive ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-100 dark:shadow-none' : 'text-gray-500 dark:text-zinc-400 hover:bg-gray-50'}`}>
+                      <item.icon size={20} />{item.name}
+                    </NavLink>
+                  ))}
+                </div>
+              </DialogPanel>
+            </TransitionChild>
+          </div>
+        </Dialog>
+      </Transition>
 
-      {/* 📱 MOBILE BOTTOM NAVIGATION (Hidden on Cart/Payment) */}
+      {/* 📱 BOTTOM NAV - PINNED TO BOTTOM */}
       {!hideBottomNav && (
-        <div className="sm:hidden fixed bottom-0 left-0 right-0 z-[60] bg-white border-t border-gray-100 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
-          <div className="flex items-center justify-around h-20">
-            {mobileNav.map((item) => {
+        <div className="sm:hidden fixed bottom-0 left-0 right-0 z-[60] bg-white/90 dark:bg-zinc-950/90 backdrop-blur-xl border-t border-gray-100 dark:border-zinc-800 pb-safe">
+          <div className="flex items-center justify-around h-16 px-2">
+            {mobileBottomNav.map((item) => {
               const Icon = item.icon;
               return (
-                <NavLink key={item.name} to={item.href} className={({ isActive }) => `flex flex-col items-center justify-center w-full h-full gap-1 transition-all ${isActive ? 'text-indigo-600' : 'text-gray-400'}`}>
+                <NavLink key={item.name} to={item.href} className={({ isActive }) => `relative flex flex-col items-center justify-center flex-1 h-full gap-0.5 transition-all ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-zinc-500'}`}>
                   {({ isActive }) => (
                     <>
-                      <div className={`p-1.5 rounded-xl transition-all ${isActive ? 'bg-indigo-50' : ''}`}>
-                        {item.isCart ? (
-                          <div className="relative"><Icon size={22} strokeWidth={isActive ? 2.5 : 2} /><div className="absolute -top-2 -right-2 scale-75"><CartBadge /></div></div>
-                        ) : (
-                          <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
-                        )}
+                      <div className={`p-1.5 rounded-xl transition-all ${isActive ? 'bg-indigo-50 dark:bg-indigo-500/10' : ''}`}>
+                        <Icon size={20} strokeWidth={isActive ? 3 : 2} />
+                        {item.isCart && <div className="absolute top-2 right-4 scale-75"><MobileCartBadge /></div>}
                       </div>
-                      <span className="text-[10px] font-bold uppercase tracking-tighter">{item.name}</span>
+                      <span className="text-[8px] font-black uppercase tracking-tighter">{item.name}</span>
                     </>
                   )}
                 </NavLink>
               );
             })}
             
-            <div className="flex flex-col items-center justify-center w-full h-full relative">
-              <Menu as="div">
-                {({ open }) => (
-                  <>
-                    <MenuButton className={`flex flex-col items-center gap-1 transition-all ${open ? 'text-indigo-600' : 'text-gray-400'}`}>
-                      <div className={`p-1.5 rounded-xl transition-all ${open ? 'bg-indigo-50' : ''}`}><User size={22} strokeWidth={open ? 2.5 : 2} /></div>
-                      <span className="text-[10px] font-bold uppercase tracking-tighter">{isLoggedIn ? 'Account' : 'Login'}</span>
-                    </MenuButton>
-
-                    <Transition
-                      enter="transition duration-200 ease-out"
-                      enterFrom="transform scale-95 opacity-0 translate-y-10"
-                      enterTo="transform scale-100 opacity-100 translate-y-0"
-                      leave="transition duration-150 ease-in"
-                      leaveFrom="transform scale-100 opacity-100 translate-y-0"
-                      leaveTo="transform scale-95 opacity-0 translate-y-10"
-                    >
-                      <MenuItems className="absolute bottom-24 right-4 left-[-150px] w-[calc(100vw-32px)] max-w-sm bg-white rounded-[2rem] shadow-[0_-20px_50px_rgba(0,0,0,0.15)] border border-gray-100 p-4 focus:outline-none z-[70]">
-                        {!isLoggedIn ? (
-                          /* GUEST VIEW */
-                          <div className="p-4 text-center">
-                            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                              <User size={32} className="text-gray-300" />
-                            </div>
-                            <h3 className="text-xl font-bold text-gray-900">Welcome!</h3>
-                            {/* Wrap the button in MenuItem so HeadlessUI handles the close event */}
-                            <MenuItem>
-                              {({ close }) => (
-                                <button 
-                                  onClick={() => { navigate('/login'); close(); }} 
-                                  className="mt-4 w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold"
-                                >
-                                  Sign In / Join
-                                </button>
-                              )}
-                            </MenuItem>
-                          </div>
-                        ) : (
-                          /* LOGGED IN VIEW */
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-4 p-4 bg-indigo-50 rounded-2xl mb-4">
-                              <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold">
-                                {user?.name?.charAt(0)}
-                              </div>
-                              <div className="flex-1 overflow-hidden">
-                                <p className="text-xs font-black text-indigo-400 uppercase tracking-widest">{user?.role || 'Member'}</p>
-                                <p className="text-base font-bold text-gray-900 truncate">{user?.name}</p>
-                              </div>
-                            </div>
-
-                            <MenuItem>
-                              {({ active, close }) => (
-                                <button 
-                                  onClick={() => { navigate('/profile'); close(); }} 
-                                  className={`flex w-full items-center gap-3 p-4 rounded-xl font-bold text-gray-700 ${active ? 'bg-gray-50' : ''}`}
-                                >
-                                  <Settings size={20} /> Edit Profile
-                                </button>
-                              )}
-                            </MenuItem>
-
-                            <MenuItem>
-                              {({ active, close }) => (
-                                <button 
-                                  onClick={() => { navigate('/profile/orders'); close(); }} 
-                                  className={`flex w-full items-center gap-3 p-4 rounded-xl font-bold text-gray-700 ${active ? 'bg-gray-50' : ''}`}
-                                >
-                                  <Package size={20} /> My Orders
-                                </button>
-                              )}
-                            </MenuItem>
-
-                            <div className="h-px bg-gray-100 my-2" />
-
-                            <MenuItem>
-                              {({ active, close }) => (
-                                <button 
-                                  onClick={() => { handleLogout(); close(); }} 
-                                  className={`flex w-full items-center gap-3 p-4 rounded-xl font-bold text-red-600 ${active ? 'bg-red-50' : ''}`}
-                                >
-                                  <LogOut size={20} /> Sign Out
-                                </button>
-                              )}
-                            </MenuItem>
-                          </div>
-                        )}
-                      </MenuItems>
-                    </Transition>
-                  </>
-                )}
-              </Menu>
-            </div>
+            {/* Mobile User Menu */}
+            <Menu as="div" className="flex-1 h-full flex items-center justify-center">
+              <MenuButton className="flex flex-col items-center gap-0.5 text-gray-400 dark:text-zinc-500">
+                <div className="p-1.5 rounded-xl">
+                  {isLoggedIn ? (
+                    <div className="w-5 h-5 bg-indigo-600 rounded-md flex items-center justify-center text-white text-[9px] font-black">{user?.name?.charAt(0)}</div>
+                  ) : <User size={20} />}
+                </div>
+                <span className="text-[8px] font-black uppercase tracking-tighter">{isLoggedIn ? 'Account' : 'Login'}</span>
+              </MenuButton>
+              <Transition as={Fragment} enter="transition duration-200" enterFrom="transform scale-95 opacity-0 translate-y-10" enterTo="transform scale-100 opacity-100 translate-y-0">
+                <MenuItems className="absolute bottom-20 right-4 left-4 bg-white dark:bg-zinc-900 rounded-[2rem] shadow-2xl border border-gray-100 dark:border-zinc-800 p-4">
+                  {!isLoggedIn ? (
+                    <button onClick={() => navigate('/login')} className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs">Sign In</button>
+                  ) : (
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-zinc-800/50 rounded-2xl mb-2">
+                        <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold">{user?.name?.charAt(0)}</div>
+                        <div>
+                          <p className="text-xs font-black text-gray-900 dark:text-white truncate">{user?.name}</p>
+                          <p className="text-[10px] text-indigo-500 font-bold uppercase">{user?.role || 'Member'}</p>
+                        </div>
+                      </div>
+                      <MenuItem>{({ active }) => <button onClick={() => navigate('/profile')} className="flex w-full items-center gap-3 p-3 rounded-xl font-bold text-gray-700 dark:text-zinc-300"><User size={18} /> Profile</button>}</MenuItem>
+                      <MenuItem>{({ active }) => <button onClick={() => navigate('/profile/orders')} className="flex w-full items-center gap-3 p-3 rounded-xl font-bold text-gray-700 dark:text-zinc-300"><Package size={18} /> Orders</button>}</MenuItem>
+                      <MenuItem>{({ active }) => <button onClick={() => navigate('/profile/orders')} className="flex w-full items-center gap-3 p-3 rounded-xl font-bold text-gray-700 dark:text-zinc-300"><CalendarDays size={18} /> Bookings</button>}</MenuItem>
+                      <button onClick={handleLogout} className="flex w-full items-center gap-3 p-3 rounded-xl font-bold text-red-500 mt-2 border-t dark:border-zinc-800 pt-3"><LogOut size={18} /> Sign Out</button>
+                    </div>
+                  )}
+                </MenuItems>
+              </Transition>
+            </Menu>
           </div>
         </div>
       )}
-      
-      {/* Dynamic Spacer */}
-      {!hideBottomNav && <div className="hidden md:visible lg:visible h-24" />}
     </>
+  );
+}
+
+function DropdownLink({ icon: Icon, label, onClick }) {
+  return (
+    <MenuItem>
+      {({ active }) => (
+        <button onClick={onClick} className={`flex items-center gap-4 w-full px-5 py-3.5 text-[11px] font-black uppercase tracking-widest rounded-2xl transition-all ${active ? 'bg-gray-100 dark:bg-zinc-800 text-indigo-600 translate-x-1' : 'text-gray-500 dark:text-zinc-400'}`}>
+          <Icon size={18} strokeWidth={2.5} /> {label}
+        </button>
+      )}
+    </MenuItem>
   );
 }

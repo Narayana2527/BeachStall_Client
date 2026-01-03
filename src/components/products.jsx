@@ -16,101 +16,110 @@ export default function Items({ title, products }) {
     addToCart(productData);
   };
 
+  // UX: Updated background for dark mode compatibility
   const flowBgStyle = {
-    backgroundColor: '#ffffff',
     backgroundImage: `
       radial-gradient(at 0% 0%, rgba(249, 115, 22, 0.08) 0, transparent 50%),
-      radial-gradient(at 100% 0%, rgba(255, 255, 255, 0) 0, rgba(249, 115, 22, 0.02) 100%),
-      repeating-linear-gradient(135deg, transparent, transparent 35px, rgba(249, 115, 22, 0.1) 36px, rgba(249, 115, 22, 0.1) 37px, transparent 38px)
+      repeating-linear-gradient(135deg, transparent, transparent 35px, rgba(249, 115, 22, 0.05) 36px, rgba(249, 115, 22, 0.05) 37px, transparent 38px)
     `,
   };
 
   return (
-    <div className="md:bg-[#fcfaf8] lg:bg-[#fcfaf8] bg-[#755b7e] py-16 overflow-hidden">
+    <div className="bg-white dark:bg-zinc-950 py-16 transition-colors duration-300 overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         
-        {/* Modern Header */}
+        {/* 🏛️ Modern Header: Hierarchy aligned with ProductItems */}
         <div className="flex flex-col items-center mb-16 text-center">
-          <h2 className="text-4xl md:text-5xl font-serif italic text-gray-900 mb-4">
+          <h2 className="text-4xl md:text-5xl font-serif italic text-gray-900 dark:text-zinc-50 mb-4 transition-colors">
             {title}
           </h2>
           <div className="flex items-center gap-3">
-            <div className="h-[2px] w-12 bg-orange-200"></div>
+            <div className="h-[2px] w-12 bg-orange-200 dark:bg-orange-900/50"></div>
             <Sparkles className="text-orange-400" size={20} />
-            <div className="h-[2px] w-12 bg-orange-200"></div>
+            <div className="h-[2px] w-12 bg-orange-200 dark:bg-orange-900/50"></div>
           </div>
         </div>
 
-        {/* Horizontal Mobile Slider / Desktop Grid */}
+        {/* 📱 Horizontal Slider / 💻 Desktop Grid */}
         <div className="
-          flex overflow-x-auto gap-10 snap-x snap-mandatory 
-          ms-overflow-style-none scrollbar-width-none [&::-webkit-scrollbar]:hidden 
-          md:grid md:grid-cols-3 lg:grid-cols-4 md:overflow-visible pb-12
+          flex overflow-x-auto gap-8 snap-x snap-mandatory 
+          scrollbar-hide md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:overflow-visible pb-12
         ">
           {products.map((product, index) => (
             <div 
               key={product._id} 
               className={`
-                min-w-[320px] md:min-w-0 snap-center
-                ${index === 0 ? 'ml-6 md:ml-0' : ''} 
+                min-w-[300px] md:min-w-0 snap-center
+                ${index === 0 ? 'ml-4 md:ml-0' : ''} 
               `}
             >
               {/* Premium Sculpted Card */}
               <div 
                 style={flowBgStyle}
-                className="group relative flex flex-col items-center p-8 rounded-[3.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.03)] border border-white transition-all duration-700 hover:shadow-[0_40px_80px_rgba(249,115,22,0.12)] hover:-translate-y-4 overflow-hidden"
+                className="group relative flex flex-col items-center p-6 rounded-[3rem] 
+                           bg-white dark:bg-zinc-900/50 
+                           border border-gray-100 dark:border-zinc-800/50
+                           shadow-[0_20px_50px_rgba(0,0,0,0.02)] dark:shadow-none
+                           transition-all duration-500 hover:-translate-y-3 
+                           hover:shadow-[0_30px_60px_rgba(249,115,22,0.1)] 
+                           overflow-hidden"
               >
                 
-                {/* Visual Accent: The Animated Wave Curve */}
-                <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-40">
+                {/* Visual Accent: SVG Wave adapted for Dark Mode */}
+                <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-40 dark:opacity-20">
                   <svg viewBox="0 0 500 500" preserveAspectRatio="none" className="w-full h-full">
                     <path 
                       d="M0,100 C150,200 350,0 500,100 L500,0 L0,0 Z" 
                       fill="url(#orange-grad)" 
-                      className="transition-all duration-700 group-hover:fill-orange-500/10"
+                      className="transition-all duration-700 group-hover:fill-orange-500/20"
                     />
                     <defs>
                       <linearGradient id="orange-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style={{ stopColor: '#f97316', stopOpacity: 0.1 }} />
-                        <stop offset="100%" style={{ stopColor: '#ffffff', stopOpacity: 0 }} />
+                        <stop offset="0%" style={{ stopColor: '#f97316', stopOpacity: 0.15 }} />
+                        <stop offset="100%" style={{ stopColor: 'transparent', stopOpacity: 0 }} />
                       </linearGradient>
                     </defs>
                   </svg>
                 </div>
 
-                {/* 1. Image Layer */}
-                <div className="relative w-full z-10 mb-8">
-                  <div className="aspect-square overflow-hidden rounded-full border-[8px] border-white shadow-2xl transition-all duration-700 group-hover:rounded-[2.5rem] group-hover:rotate-3">
+                {/* 1. Image Layer: Enhanced contrast and rotation */}
+                <div className="relative w-full z-10 mb-6 px-4">
+                  <div className="aspect-square overflow-hidden rounded-full 
+                                border-[6px] border-white dark:border-zinc-800 
+                                shadow-xl transition-all duration-700 
+                                group-hover:rounded-3xl group-hover:rotate-3 group-hover:scale-105">
                     <img
                       alt={product.name}
                       src={product.image} 
                       className="h-full w-full object-cover"
-                      onError={(e) => { e.target.src = "https://via.placeholder.com/400?text=Food"; }}
+                      loading="lazy"
+                      onError={(e) => { e.target.src = "https://via.placeholder.com/400?text=Delicious+Food"; }}
                     />
                   </div>
-                  <div className="absolute -bottom-2 right-4 bg-orange-500 text-white px-5 py-2 rounded-2xl font-black text-sm shadow-xl transform rotate-6">
+                  {/* Badge */}
+                  <div className="absolute -bottom-2 right-6 bg-orange-500 dark:bg-orange-600 text-white px-4 py-1.5 rounded-xl font-black text-sm shadow-lg transform rotate-6 group-hover:rotate-0 transition-transform">
                     ₹{product.price}
                   </div>
                 </div>
 
                 {/* 2. Content Layer */}
                 <div className="relative z-10 text-center flex-1">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-orange-600 transition-colors">
+                  <h3 className="text-xl font-black text-gray-900 dark:text-zinc-100 mb-2 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
                     {product.name}
                   </h3>
-                  <p className="text-sm text-gray-400 font-medium leading-relaxed line-clamp-2 px-4 italic">
-                    {product.description || "Crafted with passion using heritage recipes."}
+                  <p className="text-sm text-gray-500 dark:text-zinc-400 font-medium leading-relaxed line-clamp-2 px-2 italic">
+                    {product.description || "Fresh ingredients, traditionally prepared for an authentic taste."}
                   </p>
                 </div>
 
-                {/* 3. CTA Button */}
+                {/* 3. Interactive CTA: Theme-aware Button */}
                 <button 
                   onClick={() => handleAddToCart(product)}
-                  className="relative z-10 mt-10 w-full overflow-hidden rounded-2xl bg-gray-900 group/btn"
+                  className="relative z-10 mt-8 w-full overflow-hidden rounded-2xl bg-gray-900 dark:bg-zinc-100 transition-all active:scale-95 group/btn"
                 >
                   <div className="absolute inset-0 bg-orange-500 translate-y-full transition-transform duration-300 group-hover/btn:translate-y-0" />
-                  <div className="relative flex items-center justify-center gap-3 py-4 text-sm font-bold text-white uppercase tracking-tighter">
-                    <ShoppingBag size={18} />
+                  <div className="relative flex items-center justify-center gap-3 py-3.5 text-xs font-black text-white dark:text-zinc-900 group-hover/btn:text-white uppercase tracking-widest">
+                    <ShoppingBag size={16} />
                     <span>Add to Cart</span>
                   </div>
                 </button>
