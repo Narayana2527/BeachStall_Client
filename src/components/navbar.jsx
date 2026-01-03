@@ -38,7 +38,7 @@ export default function Navbar() {
   return (
     <>
       {/* 💻 DESKTOP NAVBAR */}
-      <nav className="hidden sm:block sticky top-0 z-50 bg-white/90 backdrop-blur-md  border-b border-gray-100">
+      <nav className="hidden sm:block sticky top-0 z-50 bg-white  border-b border-gray-100">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="grid grid-cols-3 h-20 items-center">
             <div className="flex justify-start">
@@ -46,7 +46,7 @@ export default function Navbar() {
                 BEACH STALL
               </span> */}
               <img 
-                src="/assets/images/BeachStall.png" // Replace with your actual path
+                src="/assets/images/BeachStall.png" 
                 alt="Beach Stall Logo"
                 onClick={() => navigate('/')}
                 style={{width:"168px", height:"80px", padding:"5px 5px"}}
@@ -117,7 +117,7 @@ export default function Navbar() {
       </nav>
 
       {/* 📱 MOBILE TOP BAR (Always Visible) */}
-      <div className="sm:hidden sticky top-0 z-50 bg-white/80 backdrop-blur-md px-6 py-4 flex justify-center items-center border-b border-gray-50">
+      <div className="sm:hidden sticky top-0 z-50 bg-white px-6 py-4 flex justify-center items-center border-b border-gray-50">
         <img 
                 src="/assets/images/BeachStall.png" // Replace with your actual path
                 alt="Beach Stall Logo"
