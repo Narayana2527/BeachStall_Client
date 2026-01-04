@@ -38,71 +38,40 @@ export const CartProvider = ({ children }) => {
     }
   }, [isLoggedIn, loading]);
 
-  const addToCart = async (product) => {
+ const addToCart = async (product, showToast = true) => {
     const token = localStorage.getItem('token');
 
-    // --- UNAUTHORIZED USER REDIRECT LOGIC ---
     if (!token) {
-      let timerInterval;
-      Swal.fire({
-        title: 'Authentication Required',
-        html: 'Please login to add items to your cart.<br/>Redirecting in <b>3</b> seconds...',
-        icon: 'info',
-        timer: 3000,
-        timerProgressBar: true,
-        showConfirmButton: true,
-        confirmButtonText: 'Login Now',
-        confirmButtonColor: '#f97316', // Orange theme
-        background: document.documentElement.classList.contains('dark') ? '#09090b' : '#fff',
-        color: document.documentElement.classList.contains('dark') ? '#fafafa' : '#18181b',
-        didOpen: () => {
-          Swal.showLoading();
-          const b = Swal.getHtmlContainer().querySelector('b');
-          timerInterval = setInterval(() => {
-            const timeLeft = Swal.getTimerLeft();
-            if (timeLeft) {
-              b.textContent = Math.ceil(timeLeft / 1000);
-            }
-          }, 100);
-        },
-        willClose: () => {
-          clearInterval(timerInterval);
-        }
-      }).then((result) => {
-        // If user clicks "Login Now" or timer expires, redirect
-        if (result.isConfirmed || result.dismiss === Swal.DismissReason.timer) {
-          navigate('/login');
-        }
-      });
+      handleUnauthorized(); 
       return;
     }
 
-    // --- AUTHORIZED ADD TO CART LOGIC ---
     try {
       const res = await axios.post(`${API_BASE_URL}/add`, product, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
       setCart(res.data.items);
-
-      // Success Feedback Toast
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: 'Added to cart',
-        showConfirmButton: false,
-        timer: 1500,
-        background: document.documentElement.classList.contains('dark') ? '#18181b' : '#fff',
-        color: document.documentElement.classList.contains('dark') ? '#fafafa' : '#18181b',
-      });
+      if (showToast) {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: 'Added to cart',
+          showConfirmButton: false,
+          timer: 1500,
+          background: document.documentElement.classList.contains('dark') ? '#18181b' : '#fff',
+          color: document.documentElement.classList.contains('dark') ? '#fafafa' : '#18181b',
+        });
+      }
 
     } catch (err) {
       console.error("Error adding to cart", err);
+      // We usually want to show errors regardless
       Swal.fire({
         icon: 'error',
         title: 'Oops...',
-        text: 'Failed to add item to cart. Please try again.',
+        text: 'Failed to update cart.',
         confirmButtonColor: '#f97316',
       });
     }

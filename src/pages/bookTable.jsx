@@ -111,7 +111,7 @@ const BookingForm = () => {
       <div className="w-full max-w-2xl bg-white dark:bg-zinc-900 rounded-[2rem] sm:rounded-[3rem] shadow-xl dark:shadow-none overflow-hidden border border-gray-100 dark:border-zinc-800">
         
         {/* 🏆 Header Section - Responsive heights */}
-        <div className="bg-indigo-600 dark:bg-indigo-500 p-6 sm:p-10 text-white relative overflow-hidden">
+        <div className="bg-[#c2dcc7d9] dark:bg-indigo-500 p-6 sm:p-10 text-white relative overflow-hidden">
           <div className="absolute -top-4 -right-4 opacity-10">
               <Sparkles size={100} className="sm:w-[150px] sm:h-[150px]" />
           </div>

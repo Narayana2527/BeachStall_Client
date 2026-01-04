@@ -24,7 +24,7 @@ const CartPage = () => {
       price: item.price,
       image: item.image,
       quantity: delta
-    });
+    },false);
   };
 
   // 1. EMPTY/UNAUTHENTICATED STATES (Themed)

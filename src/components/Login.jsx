@@ -88,7 +88,7 @@ export default function Login() {
                 <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-zinc-500">
                   Password
                 </label>
-                <Link to="/forgot-password" size="sm" className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
+                <Link to="/forgotpassword" size="sm" className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
                   Forgot?
                 </Link>
               </div>

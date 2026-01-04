@@ -111,7 +111,7 @@ const AboutPage = () => {
       </section>
 
       {/* ✉️ Footer Call to Action */}
-      <section className="py-20 px-6 bg-indigo-600 dark:bg-indigo-500 text-center text-white">
+      <section className="py-20 px-6 bg-[#c2dcc7d9] dark:bg-indigo-500 text-center text-white">
         <div className="max-w-2xl mx-auto space-y-8">
           <h2 className="text-3xl sm:text-5xl font-black uppercase tracking-tighter">Visit the Pearl <br /> of the East Coast</h2>
           <a href='/booktable' className="px-10 py-5 bg-white text-indigo-600 rounded-full font-black uppercase tracking-widest text-xs hover:bg-gray-100 transition-all active:scale-95 shadow-xl">

@@ -17,6 +17,8 @@ import { CartProvider } from './context/CartContext' // Now inside Router
 import PaymentPage from "./pages/payment";
 import OrderHistory from "./pages/OrderPage";
 import ScrollToTop from "./components/ScrollToTop";
+import ResetPassword from "./components/ResetPassword";
+import ForgotPassword from "./components/ForgotPassword";
 
 function App() {
   return (
@@ -29,6 +31,8 @@ function App() {
             <Routes>
               <Route path="/signup" element={<Signup />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/forgotpassword" element={<ForgotPassword />} />
+              <Route path="/resetpassword/:token" element={<ResetPassword />} />
               <Route path="/" element={<Home />}  />
               <Route path="/about" element ={<About />}  />
               <Route path="/menu"  element={<ModernMenu />} />
