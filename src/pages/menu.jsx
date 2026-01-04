@@ -1,126 +1,161 @@
-import React, { useState } from 'react';
-import { Leaf, Flame, Users, UtensilsCrossed } from 'lucide-react';
+import React, { useState, useMemo, useContext, useEffect } from 'react';
+import { Search, Leaf, Flame, ShoppingBag, Loader2, Utensils, ChefHat } from 'lucide-react';
+import axios from 'axios';
+import { CartContext } from '../context/CartContext';
 
-const menuData = [
-  {
-    id: 'veg-biryani',
-    name: 'Veg Biryanis',
-    items: [
-      { name: 'Paneer Tikka Biryani', price: 280, desc: 'Aromatic basmati rice layered with charcoal-grilled paneer.' },
-      { name: 'Hyderabadi Veg Dum Biryani', price: 240, desc: 'Authentic slow-cooked vegetables with saffron infusion.' },
-      { name: 'Mushroom Malai Biryani', price: 260, desc: 'Creamy mushroom chunks with mild spices.' },
-    ]
-  },
-  {
-    id: 'non-veg-biryani',
-    name: 'Non-Veg Biryanis',
-    items: [
-      { name: 'Special Chicken Dum Biryani', price: 320, desc: 'Chef’s special marinated chicken with long-grain basmati.' },
-      { name: 'Mutton Ghee Roast Biryani', price: 450, desc: 'Tender mutton pieces roasted in pure ghee.' },
-    ]
-  },
-  {
-    id: 'veg-curries',
-    name: 'Veg Curries',
-    items: [
-      { name: 'Butter Paneer Masala', price: 220, desc: 'Creamy tomato-based gravy with soft paneer cubes.' },
-      { name: 'Dal Makhani', price: 180, desc: 'Overnight slow-cooked black lentils with white butter.' },
-    ]
-  },
-  {
-    id: 'non-veg-curries',
-    name: 'Non-Veg Curries',
-    items: [
-      { name: 'Nawabi Chicken Curry', price: 340, desc: 'Rich cashew-based gravy with succulent chicken.' },
-      { name: 'Prawns Masala', price: 420, desc: 'Coastal style spicy prawns curry with coconut milk.' },
-    ]
-  },
-  {
-    id: 'catering',
-    name: 'Catering Specials',
-    items: [
-      { name: 'Grand Wedding Feast', price: 'POA', desc: 'Full-course meal including starters, main, and desserts.' },
-      { name: 'Corporate Lunch Box', price: 'POA', desc: 'Hygienically packed premium meals for offices.' },
-    ]
-  }
-];
+const ModernMenu = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('coastal-curries'); 
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  const { addToCart } = useContext(CartContext);
 
-const SimpleMenu = () => {
-  const [activeTab, setActiveTab] = useState('veg-biryani');
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get("https://beachstall-server.vercel.app/api/product/getProducts");
+        setProducts(response.data);
+        setLoading(false);
+      } catch (err) {
+        setError("Failed to load products. Please check your connection.");
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  const categories = [
+    { id: 'coastal-curries', name: 'Coastal Curries', filter: (p) => p.category === 'Coastal Curries' },
+    { id: 'non-veg-biryani', name: 'Non-Veg Biryani', filter: (p) => p.category === 'Biryani' || p.category === 'Main Course' },
+    { id: 'veg-biryani', name: 'Veg Biryani', filter: (p) => p.category === 'Veg Biryani' },
+    { id: 'veg-curries', name: 'Veg Curries', filter: (p) => p.category === 'Veg Curries' },
+    { id: 'catering', name: 'Catering', filter: (p) => p.category === 'Catering' },
+  ];
+
+  const filteredItems = useMemo(() => {
+    const activeCategory = categories.find(c => c.id === activeTab);
+    if (!activeCategory) return [];
+    const categoryItems = products.filter(activeCategory.filter);
+    if (!searchQuery) return categoryItems;
+    return categoryItems.filter(item => 
+      item.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [activeTab, searchQuery, products]);
+
+  const handleAddToCart = (item) => {
+    const productData = {
+      productId: item.id || item._id,
+      name: item.name,
+      price: item.price,
+      image: item.image || "https://via.placeholder.com/400?text=Delicious+Food",
+      quantity: 1
+    };
+    addToCart(productData);
+  };
+
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center min-h-screen space-y-4 bg-white dark:bg-zinc-950">
+      <Loader2 className="w-10 h-10 text-orange-500 animate-spin" />
+      <p className="text-gray-500 font-medium tracking-widest uppercase text-xs">Loading Menu...</p>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-white dark:bg-zinc-950 transition-colors duration-300">
+    <div className="min-h-screen bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 font-sans transition-colors duration-300">
       
-      {/* 🧭 Minimalist Category Nav */}
-      <div className="sticky top-0 z-30 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-sm border-b dark:border-zinc-900">
-        <div className="max-w-4xl mx-auto flex overflow-x-auto no-scrollbar px-6 py-5 gap-8">
-          {menuData.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setActiveTab(cat.id)}
-              className={`text-[10px] font-black uppercase tracking-[0.2em] transition-all whitespace-nowrap relative pb-1 ${
-                activeTab === cat.id 
-                ? 'text-indigo-600 dark:text-indigo-400' 
-                : 'text-gray-400 dark:text-zinc-600 hover:text-gray-600'
-              }`}
-            >
-              {cat.name}
-              {activeTab === cat.id && (
-                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-600 dark:bg-indigo-400 rounded-full" />
-              )}
-            </button>
-          ))}
+      {/* 🟢 CSS Inject to hide scrollbars globally for the nav */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}} />
+
+      {/* SEARCH BAR */}
+      <div className="fixed top-[80px] left-0 right-0 z-[47] h-[70px] bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-100 dark:border-zinc-900 flex items-center justify-center px-6">
+        <div className="relative w-full max-w-xl">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-600" size={18} />
+          <input 
+            type="text" 
+            placeholder="Search specialties..."
+            className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-sm outline-none focus:ring-2 focus:ring-orange-500/20 transition-all"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
       </div>
 
-      {/* 🍽️ Menu List */}
-      <div className="max-w-3xl mx-auto px-6 py-12">
-        {menuData.filter(c => c.id === activeTab).map((category) => (
-          <div key={category.id} className="animate-in fade-in slide-in-from-bottom-2 duration-700">
-            
-            <div className="space-y-10">
-              {category.items.map((item, idx) => (
-                <div key={idx} className="group">
-                  {/* Title & Price Row */}
-                  <div className="flex items-end gap-2 mb-1.5">
-                    <h4 className="text-sm sm:text-base font-black text-gray-900 dark:text-zinc-100 uppercase tracking-tight group-hover:text-indigo-500 transition-colors">
-                      {item.name}
-                    </h4>
-                    
-                    {/* Dotted Connector */}
-                    <div className="flex-1 border-b-2 border-dotted border-gray-200 dark:border-zinc-800 mb-1" />
-                    
-                    <span className="text-sm sm:text-base font-black text-gray-900 dark:text-white">
-                      {typeof item.price === 'number' ? `₹${item.price}` : item.price}
-                    </span>
-                  </div>
-
-                  {/* Description */}
-                  <p className="text-xs sm:text-sm text-gray-500 dark:text-zinc-500 font-medium leading-relaxed italic">
-                    {item.desc}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            {/* End of Category Ornament */}
-            <div className="mt-16 flex items-center justify-center gap-4 opacity-20">
-              <div className="h-[1px] w-12 bg-gray-400 dark:bg-zinc-600" />
-              <UtensilsCrossed size={16} className="dark:text-white" />
-              <div className="h-[1px] w-12 bg-gray-400 dark:bg-zinc-600" />
-            </div>
+      {/* 📱 RESPONSIVE TABS NAV */}
+      <nav className="fixed top-[150px] left-0 right-0 z-[40] bg-white dark:bg-zinc-950 border-b border-zinc-100 dark:border-zinc-900 shadow-sm">
+        <div className="max-w-7xl mx-auto flex items-center">
+          <div className="flex overflow-x-auto no-scrollbar py-4 px-4 gap-2 sm:gap-3 w-full justify-start md:justify-center scroll-smooth">
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => { setActiveTab(cat.id); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                className={`px-4 sm:px-6 py-2 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all border whitespace-nowrap flex-shrink-0 ${
+                  activeTab === cat.id 
+                  ? 'bg-orange-500 text-white border-orange-500 shadow-lg shadow-orange-500/20' 
+                  : 'bg-white dark:bg-zinc-900 text-zinc-500 border-zinc-200 dark:border-zinc-800 hover:text-orange-500'
+                }`}
+              >
+                {cat.name}
+              </button>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
+      </nav>
 
-      {/* 📝 Footer Section */}
-      <footer className="max-w-3xl mx-auto px-6 py-12 border-t dark:border-zinc-900 text-center">
-        <p className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-400 dark:text-zinc-600">
-          The Beach Stall • Culinary Excellence
-        </p>
-      </footer>
+      <main className="max-w-7xl mx-auto px-6 pt-[260px] pb-24 relative z-0">
+        <div className="mb-10 sm:mb-16">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="h-[2px] w-6 sm:w-8 bg-orange-500" />
+            <span className="text-orange-500 font-mono text-[9px] sm:text-[10px] tracking-[0.4em] uppercase font-bold">
+              {activeTab === 'catering' ? 'Bulk Order Services' : "Chef's Special"}
+            </span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl md:text-6xl font-black uppercase tracking-tighter italic leading-none">
+            {categories.find(c => c.id === activeTab)?.name}
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 lg:gap-x-12 gap-y-12 sm:gap-y-16">
+          {filteredItems.map((item) => (
+            <div key={item._id || item.id} className="group flex flex-col justify-between border-t border-zinc-100 dark:border-zinc-900 pt-8 transition-all duration-500 hover:-translate-y-2">
+              <div>
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex items-center gap-2">
+                    {activeTab === 'catering' ? <ChefHat size={14} className="text-orange-500" /> : (item.category?.toLowerCase().includes('veg') && !item.category?.toLowerCase().includes('non') ? <Leaf size={14} className="text-green-600" /> : <Flame size={14} className="text-orange-600" />)}
+                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{item.category}</span>
+                  </div>
+                  
+                  <div className="flex flex-col items-end">
+                    <span className="text-xl font-black italic text-orange-600">
+                      ₹{item.price}{activeTab === 'catering' && <span className="text-xl font-black italic text-orange-600 ml-1">/pp</span>}
+                    </span>
+                    {activeTab === 'catering' && (
+                      <span className="text-[8px] uppercase font-bold text-zinc-400 tracking-tighter">Min. 20 plates</span>
+                    )}
+                  </div>
+                </div>
+                
+                <h3 className="text-xl font-bold uppercase tracking-tight mb-2 group-hover:text-orange-500 transition-colors">{item.name}</h3>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 font-medium italic line-clamp-2">{item.description || "Authentic coastal preparation."}</p>
+              </div>
+              
+              <button onClick={() => handleAddToCart(item)} className="relative mt-8 overflow-hidden rounded-xl bg-gray-900 dark:bg-zinc-100 transition-all active:scale-95 group/btn">
+                <div className="absolute inset-0 bg-orange-500 translate-y-full transition-transform duration-300 group-hover/btn:translate-y-0" />
+                <div className="relative flex items-center justify-center gap-3 py-3 text-xs font-black text-white dark:text-zinc-900 group-hover/btn:text-white uppercase tracking-widest">
+                  <ShoppingBag size={16} />
+                  <span>{activeTab === 'catering' ? 'Book Catering' : 'Quick Add'}</span>
+                </div>
+              </button>
+            </div>
+          ))}
+        </div>
+      </main>
     </div>
   );
 };
 
-export default SimpleMenu;
+export default ModernMenu;
