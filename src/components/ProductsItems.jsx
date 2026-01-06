@@ -13,6 +13,7 @@ const ProductItems = () => {
     const fetchProducts = async () => {
       try {
         const response = await axios.get("https://beachstall-server.vercel.app/api/product/getProducts");
+        // 🟢 Store all products; we will filter for visibility during categorizing
         setProducts(response.data);
         setLoading(false);
       } catch (err) {
@@ -23,11 +24,26 @@ const ProductItems = () => {
     fetchProducts();
   }, []);
 
+  // 🟢 Helper to filter visible items only (handles both boolean and string 'true')
+  const visibleItems = products.filter(item => item.isFeatured === true || item.isFeatured === 'true');
+
   const categories = {
-    "Seafood": products.filter(item => item.category === 'Coastal Curries' || (item.category === 'Biryani' && (item.name.toLowerCase().includes('fish') || item.name.toLowerCase().includes('prawn')))).slice(0, 6),
-    "Non-Veg": products.filter(item => item.category === 'Biryani' || item.category === 'Main Course').slice(0, 6),
-    "Veg Curries": products.filter(item => item.category === 'Veg Curries').slice(0, 6),
-    "Veg Biryani": products.filter(item => item.category === 'Veg Biryani').slice(0, 6),
+    "Seafood": visibleItems.filter(item => 
+      item.category === 'Coastal Curries' || 
+      (item.category === 'Biryani' && (item.name.toLowerCase().includes('fish') || item.name.toLowerCase().includes('prawn')))
+    ).slice(0, 6),
+    
+    "Non-Veg": visibleItems.filter(item => 
+      item.category === 'Biryani' || item.category === 'Main Course'
+    ).slice(0, 6),
+    
+    "Veg Curries": visibleItems.filter(item => 
+      item.category === 'Veg Curries'
+    ).slice(0, 6),
+    
+    "Veg Biryani": visibleItems.filter(item => 
+      item.category === 'Veg Biryani'
+    ).slice(0, 6),
   };
 
   const tabs = [
@@ -51,7 +67,7 @@ const ProductItems = () => {
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}} />
 
-      {/* 🟢 HEADER: Balanced vertical padding for mobile/desktop */}
+      {/* HEADER */}
       <header className="pt-20 pb-10 md:pt-28 md:pb-14 text-center px-6">
         <div className="inline-flex items-center gap-4 mb-5">
           <div className="h-[1px] w-8 sm:w-12 bg-orange-500/20" />
@@ -65,7 +81,7 @@ const ProductItems = () => {
         </h1>
       </header>
 
-      {/* 🏷️ TABS NAVIGATION: Safe horizontal padding for scroll */}
+      {/* TABS NAVIGATION */}
       <nav className="sticky top-0 z-30 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-lg border-b border-gray-100 dark:border-zinc-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="flex items-center justify-start md:justify-center gap-3 sm:gap-6 py-4 overflow-x-auto no-scrollbar scroll-smooth">
@@ -87,7 +103,7 @@ const ProductItems = () => {
         </div>
       </nav>
 
-      {/* 🍱 MAIN CONTENT: Increased horizontal padding on small screens */}
+      {/* MAIN CONTENT */}
       <main className="max-w-7xl mx-auto px-6 md:px-12 py-16 md:py-24">
         <section className="animate-in fade-in slide-in-from-bottom-6 duration-700">
           {categories[activeTab].length > 0 ? (

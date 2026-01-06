@@ -37,7 +37,14 @@ const ModernMenu = () => {
   const filteredItems = useMemo(() => {
     const activeCategory = categories.find(c => c.id === activeTab);
     if (!activeCategory) return [];
-    const categoryItems = products.filter(activeCategory.filter);
+
+    // 🟢 KEY UPDATE: Filter by category AND visibility (isFeatured)
+    const categoryItems = products.filter(item => {
+      // Check if product is marked as visible in Admin
+      const isVisible = item.isFeatured === true || item.isFeatured === 'true';
+      return isVisible && activeCategory.filter(item);
+    });
+
     if (!searchQuery) return categoryItems;
     return categoryItems.filter(item => 
       item.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -65,7 +72,6 @@ const ModernMenu = () => {
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 font-sans transition-colors duration-300">
       
-      {/* 🟢 CSS Inject to hide scrollbars globally for the nav */}
       <style dangerouslySetInnerHTML={{ __html: `
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -119,40 +125,47 @@ const ModernMenu = () => {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 lg:gap-x-12 gap-y-12 sm:gap-y-16">
-          {filteredItems.map((item) => (
-            <div key={item._id || item.id} className="group flex flex-col justify-between border-t border-zinc-100 dark:border-zinc-900 pt-8 transition-all duration-500 hover:-translate-y-2">
-              <div>
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex items-center gap-2">
-                    {activeTab === 'catering' ? <ChefHat size={14} className="text-orange-500" /> : (item.category?.toLowerCase().includes('veg') && !item.category?.toLowerCase().includes('non') ? <Leaf size={14} className="text-green-600" /> : <Flame size={14} className="text-orange-600" />)}
-                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{item.category}</span>
+        {/* 🟢 EMPTY STATE HANDLING */}
+        {filteredItems.length === 0 ? (
+          <div className="py-20 text-center">
+            <p className="text-zinc-400 italic">No items available in this category right now.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 lg:gap-x-12 gap-y-12 sm:gap-y-16">
+            {filteredItems.map((item) => (
+              <div key={item._id || item.id} className="group flex flex-col justify-between border-t border-zinc-100 dark:border-zinc-900 pt-8 transition-all duration-500 hover:-translate-y-2">
+                <div>
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center gap-2">
+                      {activeTab === 'catering' ? <ChefHat size={14} className="text-orange-500" /> : (item.category?.toLowerCase().includes('veg') && !item.category?.toLowerCase().includes('non') ? <Leaf size={14} className="text-green-600" /> : <Flame size={14} className="text-orange-600" />)}
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{item.category}</span>
+                    </div>
+                    
+                    <div className="flex flex-col items-end">
+                      <span className="text-xl font-black italic text-orange-600">
+                        ₹{item.price}{activeTab === 'catering' && <span className="text-xl font-black italic text-orange-600 ml-1">/pp</span>}
+                      </span>
+                      {activeTab === 'catering' && (
+                        <span className="text-[8px] uppercase font-bold text-zinc-400 tracking-tighter">Min. 20 plates</span>
+                      )}
+                    </div>
                   </div>
                   
-                  <div className="flex flex-col items-end">
-                    <span className="text-xl font-black italic text-orange-600">
-                      ₹{item.price}{activeTab === 'catering' && <span className="text-xl font-black italic text-orange-600 ml-1">/pp</span>}
-                    </span>
-                    {activeTab === 'catering' && (
-                      <span className="text-[8px] uppercase font-bold text-zinc-400 tracking-tighter">Min. 20 plates</span>
-                    )}
-                  </div>
+                  <h3 className="text-xl font-bold uppercase tracking-tight mb-2 group-hover:text-orange-500 transition-colors">{item.name}</h3>
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400 font-medium italic line-clamp-2">{item.description || "Authentic coastal preparation."}</p>
                 </div>
                 
-                <h3 className="text-xl font-bold uppercase tracking-tight mb-2 group-hover:text-orange-500 transition-colors">{item.name}</h3>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400 font-medium italic line-clamp-2">{item.description || "Authentic coastal preparation."}</p>
+                <button onClick={() => handleAddToCart(item)} className="relative mt-8 overflow-hidden rounded-xl bg-gray-900 dark:bg-zinc-100 transition-all active:scale-95 group/btn">
+                  <div className="absolute inset-0 bg-orange-500 translate-y-full transition-transform duration-300 group-hover/btn:translate-y-0" />
+                  <div className="relative flex items-center justify-center gap-3 py-3 text-xs font-black text-white dark:text-zinc-900 group-hover/btn:text-white uppercase tracking-widest">
+                    <ShoppingBag size={16} />
+                    <span>{activeTab === 'catering' ? 'Book Catering' : 'Quick Add'}</span>
+                  </div>
+                </button>
               </div>
-              
-              <button onClick={() => handleAddToCart(item)} className="relative mt-8 overflow-hidden rounded-xl bg-gray-900 dark:bg-zinc-100 transition-all active:scale-95 group/btn">
-                <div className="absolute inset-0 bg-orange-500 translate-y-full transition-transform duration-300 group-hover/btn:translate-y-0" />
-                <div className="relative flex items-center justify-center gap-3 py-3 text-xs font-black text-white dark:text-zinc-900 group-hover/btn:text-white uppercase tracking-widest">
-                  <ShoppingBag size={16} />
-                  <span>{activeTab === 'catering' ? 'Book Catering' : 'Quick Add'}</span>
-                </div>
-              </button>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </main>
     </div>
   );
