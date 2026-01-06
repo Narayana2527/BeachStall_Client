@@ -1,16 +1,22 @@
 import React, { useState, useMemo, useContext, useEffect } from 'react';
-import { Search, Leaf, Flame, ShoppingBag, Loader2, Utensils, ChefHat } from 'lucide-react';
+import { Search, Leaf, Flame, ShoppingBag, Loader2, ChefHat } from 'lucide-react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import { CartContext } from '../context/CartContext';
 
 const ModernMenu = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('coastal-curries'); 
+  const [activeTab, setActiveTab] = useState('coastal-curries');
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   const { addToCart } = useContext(CartContext);
+  const navigate = useNavigate();
+
+  // AUTH CHECK: Replace this with your actual auth logic (e.g., from an AuthContext)
+  const isLoggedIn = !!localStorage.getItem('token'); 
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -38,9 +44,7 @@ const ModernMenu = () => {
     const activeCategory = categories.find(c => c.id === activeTab);
     if (!activeCategory) return [];
 
-    // 🟢 KEY UPDATE: Filter by category AND visibility (isFeatured)
     const categoryItems = products.filter(item => {
-      // Check if product is marked as visible in Admin
       const isVisible = item.isFeatured === true || item.isFeatured === 'true';
       return isVisible && activeCategory.filter(item);
     });
@@ -52,6 +56,24 @@ const ModernMenu = () => {
   }, [activeTab, searchQuery, products]);
 
   const handleAddToCart = (item) => {
+    // Check if user is logged in
+    if (!isLoggedIn) {
+      Swal.fire({
+        title: 'Login Required',
+        text: 'Please login to add items to your cart.',
+        icon: 'info',
+        timer: 2500,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        background: '#18181b', // matching dark:bg-zinc-900
+        color: '#fafafa',
+        iconColor: '#f97316', // orange-500
+      }).then(() => {
+        navigate('/login');
+      });
+      return;
+    }
+
     const productData = {
       productId: item.id || item._id,
       name: item.name,
@@ -60,6 +82,18 @@ const ModernMenu = () => {
       quantity: 1
     };
     addToCart(productData);
+    
+    // Optional success toast
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: 'Added to cart!',
+      showConfirmButton: false,
+      timer: 1500,
+      background: '#18181b',
+      color: '#fafafa'
+    });
   };
 
   if (loading) return (
@@ -125,7 +159,6 @@ const ModernMenu = () => {
           </h2>
         </div>
 
-        {/* 🟢 EMPTY STATE HANDLING */}
         {filteredItems.length === 0 ? (
           <div className="py-20 text-center">
             <p className="text-zinc-400 italic">No items available in this category right now.</p>

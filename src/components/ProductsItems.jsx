@@ -29,12 +29,15 @@ const ProductItems = () => {
 
   const categories = {
     "Seafood": visibleItems.filter(item => 
-      item.category === 'Coastal Curries' || 
-      (item.category === 'Biryani' && (item.name.toLowerCase().includes('fish') || item.name.toLowerCase().includes('prawn')))
+      (item.category === 'Coastal Curries' 
+      )
     ).slice(0, 6),
     
     "Non-Veg": visibleItems.filter(item => 
-      item.category === 'Biryani' || item.category === 'Main Course'
+      // Biryanis that ARE NOT seafood
+      (item.category === 'Biryani'
+      ) || 
+      item.category === 'Main Course'
     ).slice(0, 6),
     
     "Veg Curries": visibleItems.filter(item => 
