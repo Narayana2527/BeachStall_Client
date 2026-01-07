@@ -110,7 +110,7 @@ const ProductItems = () => {
       <main className="max-w-7xl mx-auto px-6 md:px-12 py-16 md:py-24">
         <section className="animate-in fade-in slide-in-from-bottom-6 duration-700">
           {categories[activeTab].length > 0 ? (
-            <div className="space-y-16">
+            <div className="space-y-12">
               <Items 
                 title={`${activeTab} Highlights`}
                 products={categories[activeTab]} 

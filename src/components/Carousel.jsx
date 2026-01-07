@@ -64,7 +64,7 @@ function StallCarousel() {
   const slide = CAROUSEL_SLIDES[currentSlide];
 
   return (
-    <div className="relative h-[85vh] w-full overflow-hidden bg-zinc-950">
+    <div className="relative h-[85vh] md:h-[57vh] lg:h-[90vh] w-full overflow-hidden bg-zinc-950">
       
       {/* --- Background Layer --- */}
       {CAROUSEL_SLIDES.map((s, idx) => (

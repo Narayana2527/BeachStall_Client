@@ -83,7 +83,7 @@ export default function ContactForm() {
             </div>
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest text-indigo-500 mb-0.5">Email Us</p>
-              <p className="font-black text-gray-900 dark:text-zinc-100 italic">hello@beachstall.com</p>
+              <p className="font-black text-gray-900 dark:text-zinc-100 italic">nd.beachstall@gmail.com</p>
             </div>
           </div>
         </div>

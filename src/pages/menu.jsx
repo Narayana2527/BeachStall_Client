@@ -146,7 +146,7 @@ const ModernMenu = () => {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-6 pt-[260px] pb-24 relative z-0">
+      <main className="max-w-7xl mx-auto px-6 pt-[180px] pb-24 relative z-0">
         <div className="mb-10 sm:mb-16">
           <div className="flex items-center gap-3 mb-3">
             <span className="h-[2px] w-6 sm:w-8 bg-orange-500" />

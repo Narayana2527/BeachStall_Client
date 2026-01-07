@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useRef } from 'react';
 import { CartContext } from '../context/CartContext';
 import { ShoppingBag, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -6,50 +6,56 @@ import Swal from 'sweetalert2';
 
 export default function Items({ title, products }) {
   const { addToCart } = useContext(CartContext);
-   const navigate = useNavigate();
-   const isLoggedIn = !!localStorage.getItem('token'); 
-  const handleAddToCart = (product) => {
-      // Check if user is logged in
-      if (!isLoggedIn) {
-        Swal.fire({
-          title: 'Login Required',
-          text: 'Please login to add items to your cart.',
-          icon: 'info',
-          timer: 2500,
-          timerProgressBar: true,
-          showConfirmButton: false,
-          background: '#18181b', // matching dark:bg-zinc-900
-          color: '#fafafa',
-          iconColor: '#f97316', // orange-500
-        }).then(() => {
-          navigate('/login');
-        });
-        return;
-      }
-  
-      const productData = {
-        productId: product.id || product._id,
-        name: product.name,
-        price: product.price,
-        image: product.image || "https://via.placeholder.com/400?text=Delicious+Food",
-        quantity: 1
-      };
-      addToCart(productData);
-      
-      // Optional success toast
-      Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: 'success',
-        title: 'Added to cart!',
-        showConfirmButton: false,
-        timer: 1500,
-        background: '#18181b',
-        color: '#fafafa'
-      });
-    };
+  const navigate = useNavigate();
+  const scrollContainerRef = useRef(null); // Ref to target the scroll area
+  const isLoggedIn = !!localStorage.getItem('token');
 
-  // UX: Updated background for dark mode compatibility
+  // Reset scroll to first item when title changes
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollLeft = 0;
+    }
+  }, [title]);
+
+  const handleAddToCart = (product) => {
+    if (!isLoggedIn) {
+      Swal.fire({
+        title: 'Login Required',
+        text: 'Please login to add items to your cart.',
+        icon: 'info',
+        timer: 2500,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        background: '#18181b',
+        color: '#fafafa',
+        iconColor: '#f97316',
+      }).then(() => {
+        navigate('/login');
+      });
+      return;
+    }
+
+    const productData = {
+      productId: product.id || product._id,
+      name: product.name,
+      price: product.price,
+      image: product.image || "https://via.placeholder.com/400?text=Delicious+Food",
+      quantity: 1
+    };
+    addToCart(productData);
+    
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: 'Added to cart!',
+      showConfirmButton: false,
+      timer: 1500,
+      background: '#18181b',
+      color: '#fafafa'
+    });
+  };
+
   const flowBgStyle = {
     backgroundImage: `
       radial-gradient(at 0% 0%, rgba(249, 115, 22, 0.08) 0, transparent 50%),
@@ -58,10 +64,9 @@ export default function Items({ title, products }) {
   };
 
   return (
-    <div className="bg-white dark:bg-zinc-950 py-16 transition-colors duration-300 overflow-hidden">
+    <div className="bg-white dark:bg-zinc-950 transition-colors duration-300 overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         
-        {/* 🏛️ Modern Header: Hierarchy aligned with ProductItems */}
         <div className="flex flex-col items-center mb-16 text-center">
           <h2 className="text-4xl md:text-5xl font-serif italic text-gray-900 dark:text-zinc-50 mb-4 transition-colors">
             {title}
@@ -73,11 +78,15 @@ export default function Items({ title, products }) {
           </div>
         </div>
 
-        {/* 📱 Horizontal Slider / 💻 Desktop Grid */}
-        <div className="
-          flex overflow-x-auto gap-8 snap-x snap-mandatory 
-          scrollbar-hide md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:overflow-visible pb-12
-        ">
+        {/* Scroll Container */}
+        <div 
+          ref={scrollContainerRef}
+          className="
+            flex overflow-x-auto gap-8 snap-x snap-mandatory 
+            scrollbar-hide md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:overflow-visible 
+            py-4 /* Added py-4 to give space for hover scale/lift without clipping */
+          "
+        >
           {products.map((product, index) => (
             <div 
               key={product._id} 
@@ -86,7 +95,7 @@ export default function Items({ title, products }) {
                 ${index === 0 ? 'ml-4 md:ml-0' : ''} 
               `}
             >
-              {/* Premium Sculpted Card */}
+              {/* Premium Sculpted Card - PREVIOUS SETUP MAINTAINED */}
               <div 
                 style={flowBgStyle}
                 className="group relative flex flex-col items-center p-6 rounded-[3rem] 
@@ -97,8 +106,7 @@ export default function Items({ title, products }) {
                            hover:shadow-[0_30px_60px_rgba(249,115,22,0.1)] 
                            overflow-hidden"
               >
-                
-                {/* Visual Accent: SVG Wave adapted for Dark Mode */}
+                {/* SVG Accent */}
                 <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-40 dark:opacity-20">
                   <svg viewBox="0 0 500 500" preserveAspectRatio="none" className="w-full h-full">
                     <path 
@@ -115,7 +123,7 @@ export default function Items({ title, products }) {
                   </svg>
                 </div>
 
-                {/* 1. Image Layer: Enhanced contrast and rotation */}
+                {/* Image Section */}
                 <div className="relative w-full z-10 mb-6 px-4">
                   <div className="aspect-square overflow-hidden rounded-full 
                                 border-[6px] border-white dark:border-zinc-800 
@@ -129,13 +137,12 @@ export default function Items({ title, products }) {
                       onError={(e) => { e.target.src = "https://via.placeholder.com/400?text=Delicious+Food"; }}
                     />
                   </div>
-                  {/* Badge */}
                   <div className="absolute -bottom-2 right-6 bg-orange-500 dark:bg-orange-600 text-white px-4 py-1.5 rounded-xl font-black text-sm shadow-lg transform rotate-6 group-hover:rotate-0 transition-transform">
                     ₹{product.price}
                   </div>
                 </div>
 
-                {/* 2. Content Layer */}
+                {/* Content Section */}
                 <div className="relative z-10 text-center flex-1">
                   <h3 className="text-xl font-black text-gray-900 dark:text-zinc-100 mb-2 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
                     {product.name}
@@ -145,7 +152,7 @@ export default function Items({ title, products }) {
                   </p>
                 </div>
 
-                {/* 3. Interactive CTA: Theme-aware Button */}
+                {/* Button Section */}
                 <button 
                   onClick={() => handleAddToCart(product)}
                   className="relative z-10 mt-8 w-full overflow-hidden rounded-2xl bg-gray-900 dark:bg-zinc-100 transition-all active:scale-95 group/btn"
