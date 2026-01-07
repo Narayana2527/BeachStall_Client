@@ -1,20 +1,53 @@
 import React, { useContext } from 'react';
 import { CartContext } from '../context/CartContext';
 import { ShoppingBag, Sparkles } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 
 export default function Items({ title, products }) {
   const { addToCart } = useContext(CartContext);
-
+   const navigate = useNavigate();
+   const isLoggedIn = !!localStorage.getItem('token'); 
   const handleAddToCart = (product) => {
-    const productData = {
-      productId: product._id,
-      name: product.name,
-      price: product.price,
-      image: product.image,
-      quantity: 1
+      // Check if user is logged in
+      if (!isLoggedIn) {
+        Swal.fire({
+          title: 'Login Required',
+          text: 'Please login to add items to your cart.',
+          icon: 'info',
+          timer: 2500,
+          timerProgressBar: true,
+          showConfirmButton: false,
+          background: '#18181b', // matching dark:bg-zinc-900
+          color: '#fafafa',
+          iconColor: '#f97316', // orange-500
+        }).then(() => {
+          navigate('/login');
+        });
+        return;
+      }
+  
+      const productData = {
+        productId: product.id || product._id,
+        name: product.name,
+        price: product.price,
+        image: product.image || "https://via.placeholder.com/400?text=Delicious+Food",
+        quantity: 1
+      };
+      addToCart(productData);
+      
+      // Optional success toast
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Added to cart!',
+        showConfirmButton: false,
+        timer: 1500,
+        background: '#18181b',
+        color: '#fafafa'
+      });
     };
-    addToCart(productData);
-  };
 
   // UX: Updated background for dark mode compatibility
   const flowBgStyle = {

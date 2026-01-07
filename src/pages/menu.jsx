@@ -192,7 +192,7 @@ const ModernMenu = () => {
                   <div className="absolute inset-0 bg-orange-500 translate-y-full transition-transform duration-300 group-hover/btn:translate-y-0" />
                   <div className="relative flex items-center justify-center gap-3 py-3 text-xs font-black text-white dark:text-zinc-900 group-hover/btn:text-white uppercase tracking-widest">
                     <ShoppingBag size={16} />
-                    <span>{activeTab === 'catering' ? 'Book Catering' : 'Quick Add'}</span>
+                    <span>{activeTab === 'catering' ? 'Book Catering' : 'Add To Cart'}</span>
                   </div>
                 </button>
               </div>
