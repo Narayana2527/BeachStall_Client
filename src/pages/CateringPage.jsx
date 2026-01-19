@@ -36,15 +36,8 @@ const CateringPage = () => {
     };
 
     addToCart(cateringData);
-
-    Swal.fire({
-      icon: 'success',
-      title: 'Added to Cart',
-      text: `Your bulk order for ${memberCount} members is ready.`,
-      background: '#18181b',
-      color: '#fafafa',
-      confirmButtonColor: '#f97316'
-    }).then(() => navigate('/cart'));
+    navigate('/cart');
+    
   };
 
   return (
