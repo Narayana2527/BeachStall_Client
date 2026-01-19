@@ -9,9 +9,7 @@ export const CartContext = createContext();
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
   const { isLoggedIn, loading } = useContext(AuthContext);
-  const navigate = useNavigate();
 
-  // Unified Base URL (Update this to your actual working Vercel URL)
   const API_BASE_URL = 'https://beachstall-server.vercel.app/api/cart';
 
   const clearCart = () => {
@@ -38,12 +36,11 @@ export const CartProvider = ({ children }) => {
     }
   }, [isLoggedIn, loading]);
 
- const addToCart = async (product, showToast = true) => {
+  const addToCart = async (product, showToast = true) => {
     const token = localStorage.getItem('token');
 
     if (!token) {
-      handleUnauthorized(); 
-      return;
+      return; 
     }
 
     try {
@@ -52,6 +49,8 @@ export const CartProvider = ({ children }) => {
       });
       
       setCart(res.data.items);
+      
+      // THIS IS THE ONLY TOAST THAT WILL RUN
       if (showToast) {
         Swal.fire({
           toast: true,
@@ -67,7 +66,6 @@ export const CartProvider = ({ children }) => {
 
     } catch (err) {
       console.error("Error adding to cart", err);
-      // We usually want to show errors regardless
       Swal.fire({
         icon: 'error',
         title: 'Oops...',

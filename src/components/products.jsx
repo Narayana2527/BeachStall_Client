@@ -7,10 +7,9 @@ import Swal from 'sweetalert2';
 export default function Items({ title, products }) {
   const { addToCart } = useContext(CartContext);
   const navigate = useNavigate();
-  const scrollContainerRef = useRef(null); // Ref to target the scroll area
+  const scrollContainerRef = useRef(null);
   const isLoggedIn = !!localStorage.getItem('token');
 
-  // Reset scroll to first item when title changes
   useEffect(() => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollLeft = 0;
@@ -42,18 +41,11 @@ export default function Items({ title, products }) {
       image: product.image || "https://via.placeholder.com/400?text=Delicious+Food",
       quantity: 1
     };
+
+    // This single call triggers the logic + the Swal alert inside CartContext.js
     addToCart(productData);
     
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'success',
-      title: 'Added to cart!',
-      showConfirmButton: false,
-      timer: 1500,
-      background: '#18181b',
-      color: '#fafafa'
-    });
+    // REDUNDANT SWAL REMOVED FROM HERE TO PREVENT DOUBLE ALERTS
   };
 
   const flowBgStyle = {
@@ -78,13 +70,12 @@ export default function Items({ title, products }) {
           </div>
         </div>
 
-        {/* Scroll Container */}
         <div 
           ref={scrollContainerRef}
           className="
             flex overflow-x-auto gap-8 snap-x snap-mandatory 
             scrollbar-hide md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:overflow-visible 
-            py-4 /* Added py-4 to give space for hover scale/lift without clipping */
+            py-4
           "
         >
           {products.map((product, index) => (
@@ -95,7 +86,6 @@ export default function Items({ title, products }) {
                 ${index === 0 ? 'ml-4 md:ml-0' : ''} 
               `}
             >
-              {/* Premium Sculpted Card - PREVIOUS SETUP MAINTAINED */}
               <div 
                 style={flowBgStyle}
                 className="group relative flex flex-col items-center p-6 rounded-[3rem] 
@@ -106,7 +96,6 @@ export default function Items({ title, products }) {
                            hover:shadow-[0_30px_60px_rgba(249,115,22,0.1)] 
                            overflow-hidden"
               >
-                {/* SVG Accent */}
                 <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-40 dark:opacity-20">
                   <svg viewBox="0 0 500 500" preserveAspectRatio="none" className="w-full h-full">
                     <path 
@@ -123,7 +112,6 @@ export default function Items({ title, products }) {
                   </svg>
                 </div>
 
-                {/* Image Section */}
                 <div className="relative w-full z-10 mb-6 px-4">
                   <div className="aspect-square overflow-hidden rounded-full 
                                 border-[6px] border-white dark:border-zinc-800 
@@ -142,7 +130,6 @@ export default function Items({ title, products }) {
                   </div>
                 </div>
 
-                {/* Content Section */}
                 <div className="relative z-10 text-center flex-1">
                   <h3 className="text-xl font-black text-gray-900 dark:text-zinc-100 mb-2 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
                     {product.name}
@@ -152,7 +139,6 @@ export default function Items({ title, products }) {
                   </p>
                 </div>
 
-                {/* Button Section */}
                 <button 
                   onClick={() => handleAddToCart(product)}
                   className="relative z-10 mt-8 w-full overflow-hidden rounded-2xl bg-gray-900 dark:bg-zinc-100 transition-all active:scale-95 group/btn"

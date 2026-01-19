@@ -19,6 +19,7 @@ import OrderHistory from "./pages/OrderPage";
 import ScrollToTop from "./components/ScrollToTop";
 import ResetPassword from "./components/ResetPassword";
 import ForgotPassword from "./components/ForgotPassword";
+import CateringPage from "./pages/CateringPage";
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
               <Route path="/" element={<Home />}  />
               <Route path="/about" element ={<About />}  />
               <Route path="/menu"  element={<ModernMenu />} />
+              <Route path="/catering-booking" element={<CateringPage />} />
               <Route path="/booktable" element={<BookTable />}  />
               <Route path="/contact"  element={<Contact />} />
               <Route path="/cart"  element={<CartPage />} />
