@@ -3,8 +3,6 @@
 /* 1. Import Inter (Modern Sans-Serif) */
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400..900;1,400..900&display=swap');
 
-@custom-variant dark (&:where(.dark, .dark *));
-
 @theme {
   /* Define the sans-serif variable */
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
@@ -30,6 +28,22 @@
     font-style: inherit !important;
   }
 
+  .dark body {
+    @apply bg-zinc-950 text-white;
+  }
+}
+
+@import "tailwindcss";
+
+/* This tells Tailwind v4 to look for the .dark class on the html tag */
+@variant dark (&:where(.dark, .dark *));
+
+/* Base background and text colors for the whole app */
+@layer base {
+  body {
+    @apply bg-white text-gray-900 transition-colors duration-300;
+  }
+  
   .dark body {
     @apply bg-zinc-950 text-white;
   }

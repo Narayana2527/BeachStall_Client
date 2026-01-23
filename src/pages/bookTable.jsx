@@ -6,280 +6,186 @@ import DatePicker from 'react-datepicker';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { 
-  Loader2, 
-  Phone, 
-  ChevronRight, 
-  AlertCircle, 
-  CalendarDays, 
-  Sparkles, 
-  Clock,
-  ChevronDown
+  Loader2, Phone, ChevronRight, AlertCircle, 
+  CalendarDays, Sparkles, Clock, ChevronDown, 
+  Users, Waves, Utensils
 } from 'lucide-react';
 
 import "react-datepicker/dist/react-datepicker.css";
 
-// 🛡️ Validation Schema
+// 🛡️ Updated Validation Schema (Removed seating)
 const bookingSchema = z.object({
   phone: z.string()
     .min(10, "Phone number must be at least 10 digits")
-    .max(15, "Phone number is too long")
-    .regex(/^[0-9+]+$/, "Invalid phone format"),
-  eventDate: z.date({
-    required_error: "Please select a date and time",
-    invalid_type_error: "That's not a valid date!",
+    .max(15, "Phone number is too long"),
+  eventDate: z.date({ required_error: "Please select arrival time" }),
+  guests: z.string().min(1, "Please select number of guests"),
+  category: z.enum(['Veg Curry', 'Non-Veg Curry', 'Veg Biryani', 'Non-Veg Biryani', 'Catering'], {
+    error_map: () => ({ message: "Please select a menu category" })
   }),
-  category: z.enum(['Wedding', 'Table Booking'], {
-    error_map: () => ({ message: "Please select an event type" })
-  }),
-  subCategory: z.string().min(1, "Please select a service/zone"),
-  nestedOption: z.string().min(1, "Please select a specific choice"),
-  customNotes: z.string().max(500, "Notes cannot exceed 500 characters").optional(),
+  speciality: z.string().min(1, "Please select your dish"),
+  customNotes: z.string().max(500).optional(),
 });
 
 const BookingForm = () => {
-  const {
-    register,
-    handleSubmit,
-    control,
-    watch,
-    setValue,
-    reset,
-    formState: { errors, isSubmitting }
-  } = useForm({
+  const { register, handleSubmit, control, watch, setValue, reset, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(bookingSchema),
-    defaultValues: {
-      phone: '',
-      category: '',
-      subCategory: '',
-      nestedOption: '',
-      customNotes: '',
-      eventDate: new Date()
-    }
+    defaultValues: { phone: '', category: '', speciality: '', guests: '2', eventDate: new Date() }
   });
 
   const watchCategory = watch("category");
-  const watchSubCategory = watch("subCategory");
 
-  // 🎨 Custom Input for DatePicker to maintain Hierarchy & UI consistency
+  const specialityMap = {
+    'Veg Curry': ['Paneer Butter Masala', 'Mushroom Malai', 'Veg Kolhapuri', 'Dal Makhani', 'Kadai Veg', 'Malai Kofta', 'Mix Veg Curry', 'Palak Paneer', 'Aloo Gobi', 'Veg Jalfrezi'],
+    'Non-Veg Curry': ['Butter Chicken', 'Mutton Rogan Josh', 'Prawns Masala', 'Fish Curry', 'Chicken Tikka Masala', 'Egg Curry', 'Crab Roast', 'Chicken Chettinad', 'Mutton Korma', 'Hyd Chicken'],
+    'Veg Biryani': ['Hyderabadi Veg Biryani', 'Paneer Biryani', 'Mushroom Biryani', 'Jackfruit Biryani', 'Soya Chaap Biryani', 'Kashmiri Pulao', 'Dum Alloo Biryani', 'Tawa Pulao', 'Veg Handi Biryani', 'Zaffrani Biryani'],
+    'Non-Veg Biryani': ['Dum Chicken Biryani', 'Mutton Biryani', 'Fish Biryani', 'Prawns Biryani', 'Egg Biryani', 'Spl Boneless Biryani', 'Donne Biryani', 'Ambur Mutton Biryani', 'Kacchi Ghosht Biryani', 'Afghan Chicken Biryani'],
+    'Catering': ['Corporate Buffet', 'Wedding Feast', 'Beach Party Pack', 'Birthday Special', 'Family Reunion Combo', 'House Warming Pack', 'Cocktail Snacks', 'Grand Thali Service', 'Outdoor Live Grill', 'Seafood Extravaganza']
+  };
+
   const DateCustomInput = forwardRef(({ value, onClick }, ref) => (
-    <button
-      type="button"
-      onClick={onClick}
-      ref={ref}
-      className="w-full flex items-center gap-4 p-4 sm:p-5 bg-gray-50 dark:bg-zinc-950 border-2 border-transparent rounded-xl sm:rounded-[1.5rem] outline-none focus:border-indigo-500 transition-all font-bold text-sm sm:text-base dark:text-white text-left group"
-    >
-      <CalendarDays className="text-gray-400 group-hover:text-indigo-500 transition-colors" size={20} />
-      <div className="flex flex-col flex-1">
-        <span className="text-[9px] uppercase tracking-widest text-gray-400 dark:text-zinc-500 mb-0.5">Selected Schedule</span>
-        <span className="truncate">{value || "Choose Date & Time"}</span>
+    <button type="button" onClick={onClick} ref={ref} className="w-full flex items-center gap-4 p-5 bg-gray-50 dark:bg-zinc-950 border-2 border-transparent rounded-2xl focus:border-cyan-500 transition-all text-left group">
+      <CalendarDays className="text-cyan-600 group-hover:scale-110 transition-transform" size={24} />
+      <div className="flex flex-col">
+        <span className="text-[10px] uppercase font-black text-gray-400 dark:text-zinc-500">Date & Time</span>
+        <span className="font-bold text-lg dark:text-white">{value || "Choose Arrival"}</span>
       </div>
-      <Clock className="text-gray-300 dark:text-zinc-800" size={18} />
     </button>
   ));
 
   const onSubmit = async (data) => {
     const token = localStorage.getItem('token');
-    const bookingData = {
-      phone: data.phone,
-      category: data.category,
-      eventDate: data.eventDate.toISOString(),
-      details: {
-        subCategory: data.subCategory,
-        nestedOption: data.nestedOption,
-        customNotes: data.customNotes
-      }
-    };
-
     try {
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      await axios.post('https://beach-stall-server-gezy.vercel.app/api/bookings', bookingData, config);
-      
-      reset();
+      await axios.post('https://beach-stall-server-gezy.vercel.app/api/bookings', data, config);
+
       Swal.fire({
-        title: 'Reserved!',
-        text: 'Your booking is successful. We look forward to seeing you!',
+        title: '<span style="color: #0891b2">Table Booked!</span>',
+        text: `Success! We've reserved a spot for ${data.guests} guests.`,
         icon: 'success',
+        confirmButtonColor: '#0891b2',
         background: document.documentElement.classList.contains('dark') ? '#18181b' : '#fff',
         color: document.documentElement.classList.contains('dark') ? '#fff' : '#000',
-        confirmButtonColor: '#4f46e5'
       });
+      reset();
     } catch (error) {
-      Swal.fire({
-        title: 'Error',
-        text: error.response?.data?.message || 'Something went wrong.',
-        icon: 'error',
-        background: document.documentElement.classList.contains('dark') ? '#18181b' : '#fff',
-        color: document.documentElement.classList.contains('dark') ? '#fff' : '#000',
-      });
+       Swal.fire({
+         title: 'Error',
+         text: error.response?.data?.message || 'Something went wrong.',
+         icon: 'error',
+         confirmButtonColor: '#0891b2'
+       });
     }
   };
 
   const ErrorMsg = ({ name }) => (
     errors[name] ? (
-      <p className="text-red-500 text-[10px] font-black uppercase tracking-tighter mt-2 flex items-center gap-1 px-1">
-        <AlertCircle size={10} strokeWidth={3} /> {errors[name].message}
+      <p className="text-red-500 text-[11px] font-bold italic mt-2 flex items-center gap-1">
+        <AlertCircle size={12} /> {errors[name].message}
       </p>
     ) : null
   );
 
+  const Label = ({ children, icon: Icon, color = "text-cyan-700 dark:text-cyan-500" }) => (
+    <label className={`flex items-center gap-2 text-[11px] font-black uppercase tracking-widest ${color} mb-2 ml-1`}>
+      {Icon && <Icon size={14} />} {children}
+    </label>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 flex items-center justify-center p-4 sm:p-8 transition-colors duration-300">
+    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 p-4 py-12 flex items-center justify-center font-sans text-slate-900 dark:text-slate-100">
       
       <style>{`
-        /* 🔵 Global DatePicker Overrides */
-        .react-datepicker { 
-          font-family: inherit; 
-          background-color: #ffffff; 
-          border: 1px solid #e5e7eb; 
-          border-radius: 1.5rem; 
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-          overflow: hidden;
-        }
-        .dark .react-datepicker { background-color: #18181b; border-color: #27272a; }
-        
-        .react-datepicker__header { background-color: #f9fafb; border-bottom: 1px solid #e5e7eb; padding: 1rem 0; }
-        .dark .react-datepicker__header { background-color: #27272a; border-bottom-color: #3f3f46; }
-        
-        .dark .react-datepicker__current-month, .dark .react-datepicker__day-name, .dark .react-datepicker-time__header { color: #fff; }
+        .react-datepicker { border-radius: 2rem; border: none; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3); overflow: hidden; }
+        .dark .react-datepicker { background-color: #18181b; color: white; border: 1px solid #27272a; }
+        .dark .react-datepicker__header { background-color: #27272a; border-bottom: 1px solid #3f3f46; }
+        .dark .react-datepicker__current-month, .dark .react-datepicker__day-name { color: white; }
         .dark .react-datepicker__day { color: #a1a1aa; }
-        .dark .react-datepicker__day:hover { background-color: #4f46e5; color: #fff; border-radius: 0.5rem; }
-        .react-datepicker__day--selected { background-color: #4f46e5 !important; border-radius: 0.5rem !important; color: #fff !important; }
-        
-        /* Time Section */
-        .react-datepicker__time-container { border-left: 1px solid #e5e7eb; width: 100px !important; }
-        .dark .react-datepicker__time-container { border-left-color: #3f3f46; background-color: #18181b; }
-        .dark .react-datepicker__time-list-item { color: #a1a1aa; background-color: transparent !important; }
-        .dark .react-datepicker__time-list-item:hover { background-color: #4f46e5 !important; color: #fff !important; }
-        
-        /* Mobile Portal UX */
-        .react-datepicker__portal { background-color: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); }
+        .dark .react-datepicker__day:hover { background-color: #0891b2; color: white; }
+        .react-datepicker__day--selected { background-color: #0891b2 !important; }
+        .react-datepicker__portal { backdrop-filter: blur(4px); }
       `}</style>
 
-      <div className="w-full max-w-2xl bg-white dark:bg-zinc-900 rounded-[2.5rem] shadow-2xl border border-gray-100 dark:border-zinc-800 overflow-hidden">
+      <div className="w-full max-w-xl bg-white dark:bg-zinc-900 rounded-[3rem] shadow-2xl border border-slate-100 dark:border-zinc-800 overflow-hidden">
         
-        {/* Header */}
-        <div className="bg-indigo-600 p-8 sm:p-12 text-white relative">
-          <div className="absolute top-0 right-0 p-8 opacity-10 animate-pulse">
-            <Sparkles size={80} />
-          </div>
-          <div className="relative z-10">
-            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-200">Reservation Desk</span>
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tighter mt-2 uppercase italic">Book Your Table</h2>
-          </div>
+        <div className="bg-cyan-600 p-12 text-white text-center relative">
+          <Waves className="absolute bottom-0 left-0 right-0 w-full opacity-10 animate-pulse" />
+          <h2 className="text-4xl font-black italic tracking-tighter uppercase mb-2">Book a Table</h2>
+          <p className="text-cyan-100 text-sm font-bold uppercase tracking-widest">Seashore Dining & Catering</p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="p-6 sm:p-10 space-y-8">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-8 sm:p-12 space-y-8">
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Phone */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest px-1">1. Guest Contact</label>
-              <div className="relative group">
-                <Phone className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
-                <input
-                  {...register("phone")}
-                  className="w-full pl-14 pr-4 py-4 sm:py-5 bg-gray-50 dark:bg-zinc-950 border-2 border-transparent rounded-xl sm:rounded-2xl outline-none focus:bg-white dark:focus:bg-zinc-950 focus:border-indigo-500 transition-all font-bold text-sm sm:text-base dark:text-white"
-                  placeholder="+91 00000 00000"
-                />
-              </div>
-              <ErrorMsg name="phone" />
-            </div>
+          {/* 1. Phone */}
+          <div className="flex flex-col">
+            <Label icon={Phone}>1. Guest Contact</Label>
+            <input {...register("phone")} className="w-full p-5 bg-gray-50 dark:bg-zinc-950 rounded-2xl border-none ring-1 ring-inset ring-gray-200 dark:ring-zinc-800 focus:ring-2 focus:ring-cyan-500 font-bold text-lg transition-all outline-none" placeholder="+91 00000 00000" />
+            <ErrorMsg name="phone" />
+          </div>
 
-            {/* Responsive DatePicker */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest px-1">2. Event Timing</label>
-              <Controller
-                control={control}
-                name="eventDate"
-                render={({ field }) => (
-                  <DatePicker
-                    selected={field.value}
-                    onChange={(date) => field.onChange(date)}
-                    showTimeSelect
-                    minDate={new Date()}
-                    dateFormat="MMMM d, h:mm aa"
-                    withPortal={window.innerWidth < 768} // Centered modal on mobile
-                    customInput={<DateCustomInput />}
-                  />
-                )}
+          {/* 2. Guests */}
+          <div className="flex flex-col">
+            <Label icon={Users}>2. Table Size</Label>
+            <select {...register("guests")} className="w-full p-5 bg-gray-50 dark:bg-zinc-950 rounded-2xl border-none ring-1 ring-inset ring-gray-200 dark:ring-zinc-800 focus:ring-2 focus:ring-cyan-500 font-bold text-lg appearance-none cursor-pointer outline-none">
+              {[1, 2, 3, 4, 5, 6, 8, 10, 15].map(n => <option key={n} value={n}>{n} {n === 1 ? 'Guest' : 'Guests'}</option>)}
+            </select>
+            <ErrorMsg name="guests" />
+          </div>
+
+          {/* 3. Date & Time */}
+          <div className="flex flex-col">
+            <Label icon={Clock}>3. Arrival Time</Label>
+            <Controller control={control} name="eventDate" render={({ field }) => (
+              <DatePicker 
+                selected={field.value} 
+                onChange={(date) => field.onChange(date)} 
+                showTimeSelect 
+                dateFormat="MMMM d, h:mm aa" 
+                customInput={<DateCustomInput />}
+                withPortal={window.innerWidth < 768}
               />
-              <ErrorMsg name="eventDate" />
+            )} />
+            <ErrorMsg name="eventDate" />
+          </div>
+
+          {/* 4. Category */}
+          <div className="flex flex-col">
+            <Label icon={Utensils}>4. Dining Category</Label>
+            <select 
+              {...register("category", { onChange: () => setValue("speciality", "") })}
+              className="w-full p-5 bg-gray-50 dark:bg-zinc-950 rounded-2xl border-none ring-1 ring-inset ring-gray-200 dark:ring-zinc-800 focus:ring-2 focus:ring-cyan-500 font-bold text-lg appearance-none cursor-pointer outline-none"
+            >
+              <option value="">Choose Category...</option>
+              {Object.keys(specialityMap).map(cat => <option key={cat} value={cat}>{cat}</option>)}
+            </select>
+            <ErrorMsg name="category" />
+          </div>
+
+          {/* 5. Speciality (Dynamic) */}
+          {watchCategory && (
+            <div className="flex flex-col animate-in fade-in slide-in-from-top-4 duration-500">
+              <Label icon={Sparkles} color="text-emerald-600 dark:text-emerald-400">5. Select Your Speciality</Label>
+              <select {...register("speciality")} className="w-full p-5 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-2xl border-none ring-2 ring-emerald-200 dark:ring-emerald-900 focus:ring-emerald-500 font-bold text-lg appearance-none cursor-pointer outline-none">
+                <option value="">Which dish would you like?</option>
+                {specialityMap[watchCategory].map(item => <option key={item} value={item}>{item}</option>)}
+              </select>
+              <ErrorMsg name="speciality" />
             </div>
+          )}
+
+          {/* 6. Notes */}
+          <div className="flex flex-col">
+            <Label>6. Special Requests</Label>
+            <textarea {...register("customNotes")} className="w-full p-5 bg-gray-50 dark:bg-zinc-950 rounded-2xl border-none ring-1 ring-inset ring-gray-200 dark:ring-zinc-800 focus:ring-2 focus:ring-cyan-500 font-bold min-h-[120px] outline-none transition-all" placeholder="Allergies, birthday surprises, etc." />
           </div>
 
-          <hr className="border-gray-100 dark:border-zinc-800" />
-
-          {/* Selections */}
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-indigo-500 uppercase tracking-widest px-1">3. Category</label>
-              <div className="relative">
-                <select 
-                  {...register("category", { onChange: () => { setValue("subCategory", ""); setValue("nestedOption", ""); }})}
-                  className="w-full appearance-none p-4 sm:p-5 bg-gray-50 dark:bg-zinc-950 border-2 border-transparent rounded-xl sm:rounded-[1.5rem] outline-none focus:border-indigo-500 transition-all font-black uppercase text-xs tracking-widest dark:text-white cursor-pointer"
-                >
-                  <option value="">Select Option</option>
-                  <option value="Wedding">💍 Wedding Celebration</option>
-                  <option value="Table Booking">🍽️ Premium Dining</option>
-                </select>
-                <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
-              </div>
-              <ErrorMsg name="category" />
-            </div>
-
-            {watchCategory && (
-              <div className="space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest px-1">4. Service Type</label>
-                <select 
-                  {...register("subCategory", { onChange: () => setValue("nestedOption", "") })}
-                  className="w-full p-4 sm:p-5 bg-emerald-50/30 dark:bg-emerald-500/5 border-2 border-transparent rounded-xl sm:rounded-[1.5rem] outline-none focus:border-emerald-500 font-bold text-sm dark:text-zinc-100 cursor-pointer"
-                >
-                  <option value="">Select Service</option>
-                  {watchCategory === 'Wedding' ? (
-                    <><option value="Catering">Gourmet Catering</option><option value="Decor">Thematic Decoration</option></>
-                  ) : (
-                    <><option value="Indoor">Indoor Hall</option><option value="Outdoor">Terrace/Poolside</option></>
-                  )}
-                </select>
-                <ErrorMsg name="subCategory" />
-              </div>
-            )}
-
-            {watchSubCategory && (
-              <div className="space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <label className="text-[10px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest px-1">5. Specific Choice</label>
-                <select 
-                  {...register("nestedOption")}
-                  className="w-full p-4 sm:p-5 bg-gray-50 dark:bg-zinc-950 border-2 border-transparent rounded-xl sm:rounded-[1.5rem] outline-none focus:border-indigo-500 font-bold text-sm dark:text-zinc-100 cursor-pointer"
-                >
-                  <option value="">Choose preference...</option>
-                  {watchSubCategory === 'Catering' && <><option value="Veg-Thali">Veg Thali</option><option value="Non-Veg">Premium Non-Veg</option></>}
-                  {watchSubCategory === 'Decor' && <><option value="Floral">Floral Theme</option><option value="Minimalist">Modern Minimalist</option></>}
-                  {watchSubCategory === 'Indoor' && <><option value="AC-Lounge">AC Lounge</option><option value="Main-Hall">Main Grand Hall</option></>}
-                  {watchSubCategory === 'Outdoor' && <><option value="Sea-Facing">Sea Facing</option><option value="Garden">Garden Side</option></>}
-                </select>
-                <ErrorMsg name="nestedOption" />
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest px-1">Additional Requests</label>
-            <textarea 
-              {...register("customNotes")}
-              className="w-full p-5 bg-gray-50 dark:bg-zinc-950 border-2 border-transparent rounded-[2rem] focus:bg-white dark:focus:bg-zinc-950 focus:border-indigo-500 outline-none transition-all text-sm font-bold dark:text-white min-h-[120px]"
-              placeholder="Any specific requests?"
-            />
-          </div>
-
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-6 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-200 dark:disabled:bg-zinc-800 text-white rounded-[2rem] font-black uppercase tracking-[0.2em] text-xs flex justify-center items-center gap-3 transition-all active:scale-95 shadow-xl shadow-indigo-500/20"
+            className="w-full py-6 bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-300 dark:disabled:bg-zinc-800 text-white rounded-[2rem] font-black uppercase tracking-widest text-lg flex justify-center items-center gap-4 shadow-2xl shadow-cyan-500/40 transition-all active:scale-95"
           >
-            {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : (
-              <>Confirm Booking <ChevronRight size={18} strokeWidth={3} /></>
-            )}
+            {isSubmitting ? <Loader2 className="animate-spin" /> : <>Confirm Reservation <ChevronRight size={24} /></>}
           </button>
         </form>
       </div>
