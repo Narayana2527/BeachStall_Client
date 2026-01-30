@@ -1,34 +1,42 @@
-import React, { useState } from "react";
-import axios from "axios";
+import React, { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import api from "../axios/axios"; // 👈 Use your pre-configured api instance
+import { AuthContext } from "../context/AuthContext"; // Import context if you want to auto-login
 import { User, Mail, Lock, CheckCircle, ShieldCheck, ArrowRight, Loader2 } from "lucide-react";
 
 export default function Signup() {
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState("");
+  const { checkUser } = useContext(AuthContext); // 👈 For silent auto-login after signup
   const navigate = useNavigate();
 
-  // 1. Initialize React Hook Form
   const {
     register,
     handleSubmit,
     watch,
     formState: { errors },
   } = useForm({
-    mode: "onChange", // Validates as the user types (optional)
+    mode: "onChange",
   });
 
-  // 2. Watch password to validate "Confirm Password" match
   const password = watch("password");
 
   const onSubmit = async (data) => {
     setIsLoading(true);
     setServerError("");
     try {
-      // 'data' contains all form fields automatically
-      await axios.post("https://beach-stall-server-gezy.vercel.app/api/user/register", data);
-      navigate("/login");
+      // 1. Post to registration endpoint
+      const res = await api.post("/api/user/register", data);
+      
+      // 2. If your backend sends a cookie on registration (standard practice):
+      // We run checkUser to update the global Auth state immediately.
+      if (res.data.success) {
+        await checkUser(); 
+        navigate("/"); // Redirect to home instead of login for better UX
+      } else {
+        navigate("/login");
+      }
     } catch (err) {
       setServerError(err.response?.data?.message || "Registration failed. Please try again.");
     } finally {
@@ -57,7 +65,6 @@ export default function Signup() {
           )}
 
           <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
-            {/* Name */}
             <InputField 
               label="Full Name" 
               icon={<User size={18}/>}
@@ -66,7 +73,6 @@ export default function Signup() {
               {...register("name", { required: "Full name is required" })}
             />
 
-            {/* Email */}
             <InputField 
               label="Email Address" 
               type="email"
@@ -82,7 +88,6 @@ export default function Signup() {
               })}
             />
 
-            {/* Passwords Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <InputField 
                 label="Password" 
@@ -106,7 +111,6 @@ export default function Signup() {
               />
             </div>
 
-            {/* Terms Checkbox */}
             <div className="flex items-start px-1 pt-2">
               <div className="flex items-center h-5">
                 <input
@@ -144,8 +148,6 @@ export default function Signup() {
   );
 }
 
-// 🧱 Reusable Input Component using forwardRef
-// React Hook Form needs access to the underlying DOM element via 'ref'
 const InputField = React.forwardRef(({ label, name, type, icon, error, placeholder, ...rest }, ref) => {
   return (
     <div className="space-y-2">
@@ -165,7 +167,7 @@ const InputField = React.forwardRef(({ label, name, type, icon, error, placehold
           className={`w-full pl-12 pr-4 py-4 bg-white dark:bg-zinc-950 border-2 rounded-2xl outline-none transition-all font-bold dark:text-white text-sm ${
             error 
               ? 'border-red-400/20 focus:border-red-500' 
-              : 'border-transparent focus:border-indigo-500'
+              : 'border-transparent focus:border-indigo-500 shadow-sm'
           }`}
         />
       </div>

@@ -1,17 +1,12 @@
 import React, { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
-import { useForm } from "react-hook-form"; // High performance engine
+import { useForm } from "react-hook-form"; 
 import { AuthContext } from "../context/AuthContext";
+import api from "../axios/axios"; // Use your configured axios instance
 import { Mail, Lock, LogIn, Loader2, ArrowRight, AlertCircle } from "lucide-react";
 
-// Flexible API Base URL
-const API_BASE_URL = window.location.hostname === "localhost" 
-  ? "http://localhost:5000" 
-  : "https://beach-stall-server-gezy.vercel.app";
-
 export default function Login() {
-  const { checkUser } = useContext(AuthContext);
+  const { login } = useContext(AuthContext); // Use login from context
   const navigate = useNavigate();
   const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,15 +20,16 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const res = await axios.post(`${API_BASE_URL}/api/user/login`, data);
+      // We call the login function from AuthContext
+      // It handles the API call and sets the User state
+      await login(data.email, data.password);
       
-      if (res.data.token) {
-        localStorage.setItem('token', res.data.token);
-        await checkUser(); 
-        navigate('/');
-      }
+      // If successful, navigate to home
+      // The cookie is already set by the browser automatically
+      navigate('/');
     } catch (err) {
-      setServerError(err.response?.data?.message || "Invalid email or password");
+      // We throw the error message from the context login function
+      setServerError(err || "Invalid email or password");
     } finally {
       setLoading(false);
     }
@@ -89,7 +85,7 @@ export default function Login() {
                 <label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-zinc-500">
                   Password
                 </label>
-                <Link to="/forgotpassword" size="sm" className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
+                <Link to="/forgotpassword" text-sm="true" className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
                   Forgot?
                 </Link>
               </div>
