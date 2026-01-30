@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { AuthContext } from './AuthContext';
-import api from '../axios/axios'; // Import your pre-configured axios instance
+import api from '../axios/axios'; 
 import Swal from 'sweetalert2';
 
 export const CartContext = createContext();
@@ -9,37 +9,42 @@ export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
   const { isLoggedIn, loading } = useContext(AuthContext);
 
-  // Use a relative path or the api instance's baseURL logic
   const CART_API_PATH = '/api/cart';
 
   const clearCart = () => {
     setCart([]);
   };
 
+  // 1. Fetch Cart (No headers needed, cookies handle auth)
   const fetchCart = useCallback(async () => {
-    // We no longer check for a token string here. 
-    // If we are logged in, the cookie exists in the browser.
     try {
       const res = await api.get(CART_API_PATH);
+      // Backend should return { items: [...] }
       setCart(res.data.items || []);
     } catch (err) {
       console.error("Cart fetch error", err);
+      // If unauthorized, ensure local cart is cleared
       if (err.response?.status === 401) setCart([]);
     }
   }, []);
 
+  // 2. Sync Cart with Login State
   useEffect(() => {
     if (!loading) {
-      if (isLoggedIn) fetchCart();
-      else setCart([]);
+      if (isLoggedIn) {
+        fetchCart();
+      } else {
+        setCart([]);
+      }
     }
   }, [isLoggedIn, loading, fetchCart]);
 
+  // 3. Add to Cart
   const addToCart = async (product, showToast = true) => {
     if (!isLoggedIn) {
       Swal.fire({
         title: 'Please Login',
-        text: 'You need to be logged in to add items to your cart.',
+        text: 'You need an account to add items to your cart.',
         icon: 'info',
         confirmButtonColor: '#f97316',
       });
@@ -47,9 +52,7 @@ export const CartProvider = ({ children }) => {
     }
 
     try {
-      // Cookies are sent automatically by 'api'
       const res = await api.post(`${CART_API_PATH}/add`, product);
-      
       setCart(res.data.items);
       
       if (showToast) {
@@ -65,7 +68,6 @@ export const CartProvider = ({ children }) => {
         });
       }
     } catch (err) {
-      console.error("Error adding to cart", err);
       Swal.fire({
         icon: 'error',
         title: 'Oops...',
@@ -75,6 +77,7 @@ export const CartProvider = ({ children }) => {
     }
   };
 
+  // 4. Remove Item
   const removeItem = async (productId) => {
     try {
       const res = await api.delete(`${CART_API_PATH}/remove/${productId}`);
@@ -84,9 +87,10 @@ export const CartProvider = ({ children }) => {
     }
   };
 
+  // --- THE FIX: Change AuthContext.Provider to CartContext.Provider ---
   return (
-    <AuthContext.Provider value={{ cart, addToCart, removeItem, fetchCart, clearCart }}>
+    <CartContext.Provider value={{ cart, addToCart, removeItem, fetchCart, clearCart }}>
       {children}
-    </AuthContext.Provider>
+    </CartContext.Provider>
   );
 };
