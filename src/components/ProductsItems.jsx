@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
-// Renamed to 'api' to clarify this is your custom instance
+import React, { useState, useEffect, useContext } from "react"; // Added useContext
 import api from '../axios/axios'; 
 import Items from "./products";
 import { Loader2, Utensils, Fish, Leaf, Drumstick, ChevronRight, AlertCircle } from "lucide-react";
+import { CartContext } from "../context/CartContext"; // Import your CartContext
 
 const ProductItems = () => {
   const [products, setProducts] = useState([]);
@@ -10,8 +10,10 @@ const ProductItems = () => {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("Seafood");
 
+  // Consume the CartContext
+  const { addToCart } = useContext(CartContext);
+
   useEffect(() => {
-    // AbortController cancels the request if the user navigates away
     const controller = new AbortController();
 
     const fetchProducts = async () => {
@@ -21,7 +23,6 @@ const ProductItems = () => {
           signal: controller.signal
         });
 
-        // Robust check: Ensure we are setting an array even if the API structure varies
         const data = Array.isArray(response.data) ? response.data : response.data.products || [];
         setProducts(data);
         setError(null);
@@ -35,10 +36,9 @@ const ProductItems = () => {
     };
 
     fetchProducts();
-    return () => controller.abort(); // Cleanup
+    return () => controller.abort();
   }, []);
 
-  // Filter logic remains the same but added a fallback to empty array
   const visibleItems = (products || []).filter(item => 
     item.isFeatured === true || item.isFeatured === 'true'
   );
@@ -68,10 +68,7 @@ const ProductItems = () => {
     <div className="flex flex-col items-center justify-center min-h-[40vh] text-center px-6">
       <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
       <p className="text-gray-800 dark:text-zinc-200 font-medium">{error}</p>
-      <button 
-        onClick={() => window.location.reload()} 
-        className="mt-4 text-orange-500 font-bold hover:underline"
-      >
+      <button onClick={() => window.location.reload()} className="mt-4 text-orange-500 font-bold hover:underline">
         Try Again
       </button>
     </div>
@@ -122,9 +119,11 @@ const ProductItems = () => {
         <section className="animate-in fade-in slide-in-from-bottom-6 duration-700">
           {categories[activeTab]?.length > 0 ? (
             <div className="space-y-12">
+              {/* Pass addToCart function as a prop to your Items component */}
               <Items 
                 title={`${activeTab} Highlights`}
                 products={categories[activeTab]} 
+                onAddToCart={addToCart} 
               />
               <div className="flex justify-center pt-8">
                 <a href="/menu" className="group inline-flex items-center gap-3 px-10 py-4 rounded-full border-2 border-orange-500/10 text-sm font-black uppercase tracking-widest text-orange-500 hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-all duration-500">

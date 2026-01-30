@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Search, ShoppingBag, Loader2, Filter, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import api from '../axios/axios';
+import { useContext } from 'react';
+import { CartContext } from '../context/CartContext';
 
 const ModernMenu = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+  const { addToCart } = useContext(CartContext);
   // Mobile Sidebar State
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
@@ -170,7 +172,16 @@ const ModernMenu = () => {
                       </div>
                       <p className="text-xl md:text-2xl font-black italic text-zinc-900 dark:text-white">₹{item.price}</p>
                     </div>
-                    <button className="w-full mt-6 py-4 bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-orange-500 transition-colors">
+                    <button 
+                      onClick={() => addToCart({
+                        productId: item._id, // Ensure this matches your backend's expected 'productId'
+                        name: item.name,
+                        price: item.price,
+                        image: item.image, // Ensure your product object has an image URL
+                        quantity: 1
+                      })}
+                      className="..."
+                    >
                       <ShoppingBag size={14} /> Add to Order
                     </button>
                   </div>

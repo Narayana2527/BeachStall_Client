@@ -1,14 +1,15 @@
 import React, { useContext, useEffect, useRef } from 'react';
 import { CartContext } from '../context/CartContext';
+import { AuthContext } from '../context/AuthContext'; // 1. Import AuthContext
 import { ShoppingBag, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
 export default function Items({ title, products }) {
   const { addToCart } = useContext(CartContext);
+  const { isLoggedIn } = useContext(AuthContext); // 2. Use isLoggedIn from Context
   const navigate = useNavigate();
   const scrollContainerRef = useRef(null);
-  const isLoggedIn = !!localStorage.getItem('token');
 
   useEffect(() => {
     if (scrollContainerRef.current) {
@@ -17,6 +18,8 @@ export default function Items({ title, products }) {
   }, [title]);
 
   const handleAddToCart = (product) => {
+    // 3. Logic remains clean: If not logged in, redirect.
+    // The CartContext.js will now use 'withCredentials: true' to send the cookie.
     if (!isLoggedIn) {
       Swal.fire({
         title: 'Login Required',
@@ -25,8 +28,8 @@ export default function Items({ title, products }) {
         timer: 2500,
         timerProgressBar: true,
         showConfirmButton: false,
-        background: '#18181b',
-        color: '#fafafa',
+        background: document.documentElement.classList.contains('dark') ? '#18181b' : '#fff',
+        color: document.documentElement.classList.contains('dark') ? '#fafafa' : '#18181b',
         iconColor: '#f97316',
       }).then(() => {
         navigate('/login');
@@ -35,17 +38,14 @@ export default function Items({ title, products }) {
     }
 
     const productData = {
-      productId: product.id || product._id,
+      productId: product._id, // MongoDB standard
       name: product.name,
       price: product.price,
-      image: product.image || "https://via.placeholder.com/400?text=Delicious+Food",
+      image: product.image,
       quantity: 1
     };
 
-    // This single call triggers the logic + the Swal alert inside CartContext.js
     addToCart(productData);
-    
-    // REDUNDANT SWAL REMOVED FROM HERE TO PREVENT DOUBLE ALERTS
   };
 
   const flowBgStyle = {
@@ -72,37 +72,21 @@ export default function Items({ title, products }) {
 
         <div 
           ref={scrollContainerRef}
-          className="
-            flex overflow-x-auto gap-8 snap-x snap-mandatory 
-            scrollbar-hide md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:overflow-visible 
-            py-4
-          "
+          className="flex overflow-x-auto gap-8 snap-x snap-mandatory scrollbar-hide md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:overflow-visible py-4"
         >
           {products.map((product, index) => (
             <div 
               key={product._id} 
-              className={`
-                min-w-[300px] md:min-w-0 snap-center
-                ${index === 0 ? 'ml-4 md:ml-0' : ''} 
-              `}
+              className={`min-w-[300px] md:min-w-0 snap-center ${index === 0 ? 'ml-4 md:ml-0' : ''}`}
             >
               <div 
                 style={flowBgStyle}
-                className="group relative flex flex-col items-center p-6 rounded-[3rem] 
-                           bg-white dark:bg-zinc-900/50 
-                           border border-gray-100 dark:border-zinc-800/50
-                           shadow-[0_20px_50px_rgba(0,0,0,0.02)] dark:shadow-none
-                           transition-all duration-500 hover:-translate-y-3 
-                           hover:shadow-[0_30px_60px_rgba(249,115,22,0.1)] 
-                           overflow-hidden"
+                className="group relative flex flex-col items-center p-6 rounded-[3rem] bg-white dark:bg-zinc-900/50 border border-gray-100 dark:border-zinc-800/50 shadow-[0_20px_50px_rgba(0,0,0,0.02)] dark:shadow-none transition-all duration-500 hover:-translate-y-3 hover:shadow-[0_30px_60px_rgba(249,115,22,0.1)] overflow-hidden"
               >
+                {/* Visual Decoration */}
                 <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-40 dark:opacity-20">
                   <svg viewBox="0 0 500 500" preserveAspectRatio="none" className="w-full h-full">
-                    <path 
-                      d="M0,100 C150,200 350,0 500,100 L500,0 L0,0 Z" 
-                      fill="url(#orange-grad)" 
-                      className="transition-all duration-700 group-hover:fill-orange-500/20"
-                    />
+                    <path d="M0,100 C150,200 350,0 500,100 L500,0 L0,0 Z" fill="url(#orange-grad)" className="transition-all duration-700 group-hover:fill-orange-500/20" />
                     <defs>
                       <linearGradient id="orange-grad" x1="0%" y1="0%" x2="100%" y2="100%">
                         <stop offset="0%" style={{ stopColor: '#f97316', stopOpacity: 0.15 }} />
@@ -112,17 +96,14 @@ export default function Items({ title, products }) {
                   </svg>
                 </div>
 
+                {/* Product Image */}
                 <div className="relative w-full z-10 mb-6 px-4">
-                  <div className="aspect-square overflow-hidden rounded-full 
-                                border-[6px] border-white dark:border-zinc-800 
-                                shadow-xl transition-all duration-700 
-                                group-hover:rounded-3xl group-hover:rotate-3 group-hover:scale-105">
+                  <div className="aspect-square overflow-hidden rounded-full border-[6px] border-white dark:border-zinc-800 shadow-xl transition-all duration-700 group-hover:rounded-3xl group-hover:rotate-3 group-hover:scale-105">
                     <img
                       alt={product.name}
                       src={product.image} 
                       className="h-full w-full object-cover"
                       loading="lazy"
-                      onError={(e) => { e.target.src = "https://via.placeholder.com/400?text=Delicious+Food"; }}
                     />
                   </div>
                   <div className="absolute -bottom-2 right-6 bg-orange-500 dark:bg-orange-600 text-white px-4 py-1.5 rounded-xl font-black text-sm shadow-lg transform rotate-6 group-hover:rotate-0 transition-transform">
