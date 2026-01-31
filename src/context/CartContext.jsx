@@ -7,39 +7,41 @@ export const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
-  const { isLoggedIn, loading } = useContext(AuthContext);
+  const { isLoggedIn, loading: authLoading } = useContext(AuthContext);
 
   const CART_API_PATH = '/api/cart';
 
-  const clearCart = () => {
+  // Helper to clear local state
+  const clearCart = useCallback(() => {
     setCart([]);
-  };
+  }, []);
 
-  // 1. Fetch Cart (No headers needed, cookies handle auth)
+  // 1. Fetch Cart (Cookies handle auth)
   const fetchCart = useCallback(async () => {
     try {
       const res = await api.get(CART_API_PATH);
-      // Backend should return { items: [...] }
+      // Ensure we set the items array correctly based on your controller response
       setCart(res.data.items || []);
     } catch (err) {
-      console.error("Cart fetch error", err);
-      // If unauthorized, ensure local cart is cleared
-      if (err.response?.status === 401) setCart([]);
+      console.error("Cart fetch error:", err.response?.data || err.message);
+      if (err.response?.status === 401) {
+        setCart([]);
+      }
     }
   }, []);
 
   // 2. Sync Cart with Login State
   useEffect(() => {
-    if (!loading) {
+    if (!authLoading) {
       if (isLoggedIn) {
         fetchCart();
       } else {
-        setCart([]);
+        clearCart();
       }
     }
-  }, [isLoggedIn, loading, fetchCart]);
+  }, [isLoggedIn, authLoading, fetchCart, clearCart]);
 
-  // 3. Add to Cart
+  // 3. Add to Cart / Update Quantity
   const addToCart = async (product, showToast = true) => {
     if (!isLoggedIn) {
       Swal.fire({
@@ -52,22 +54,39 @@ export const CartProvider = ({ children }) => {
     }
 
     try {
-      const res = await api.post(`${CART_API_PATH}/add`, product);
-      setCart(res.data.items);
+      /**
+       * NORMALIZATION FIX:
+       * Your backend controller expects: { productId, name, price, image, quantity }
+       * Some frontend components might pass 'item._id' instead of 'productId'.
+       */
+      const cartPayload = {
+        productId: product._id || product.productId,
+        name: product.name,
+        price: product.price,
+        image: product.image || (product.images && product.images[0]),
+        quantity: product.quantity || 1 // Defaults to 1 for new additions
+      };
+
+      const res = await api.post(`${CART_API_PATH}/add`, cartPayload);
+      
+      // Update local state with the new items list returned from backend
+      setCart(res.data.items || []);
       
       if (showToast) {
+        const isDark = document.documentElement.classList.contains('dark');
         Swal.fire({
           toast: true,
           position: 'top-end',
           icon: 'success',
-          title: 'Added to cart',
+          title: 'Cart Updated',
           showConfirmButton: false,
           timer: 1500,
-          background: document.documentElement.classList.contains('dark') ? '#18181b' : '#fff',
-          color: document.documentElement.classList.contains('dark') ? '#fafafa' : '#18181b',
+          background: isDark ? '#18181b' : '#fff',
+          color: isDark ? '#fafafa' : '#18181b',
         });
       }
     } catch (err) {
+      console.error("Add to cart error:", err);
       Swal.fire({
         icon: 'error',
         title: 'Oops...',
@@ -81,15 +100,24 @@ export const CartProvider = ({ children }) => {
   const removeItem = async (productId) => {
     try {
       const res = await api.delete(`${CART_API_PATH}/remove/${productId}`);
-      setCart(res.data.items);
+      setCart(res.data.items || []);
     } catch (err) {
-      console.error("Remove item error", err);
+      console.error("Remove item error:", err);
     }
   };
 
-  // --- THE FIX: Change AuthContext.Provider to CartContext.Provider ---
+  const value = {
+    cart,
+    addToCart,
+    removeItem,
+    fetchCart,
+    clearCart,
+    cartCount: cart.reduce((acc, item) => acc + item.quantity, 0),
+    cartTotal: cart.reduce((acc, item) => acc + (item.price * item.quantity), 0)
+  };
+
   return (
-    <CartContext.Provider value={{ cart, addToCart, removeItem, fetchCart, clearCart }}>
+    <CartContext.Provider value={value}>
       {children}
     </CartContext.Provider>
   );
