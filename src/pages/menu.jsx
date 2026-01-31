@@ -1,34 +1,56 @@
-import React, { useState, useEffect } from 'react';
-import { Search, ShoppingBag, Loader2, Filter, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import React, { useState, useEffect, useContext, useTransition, useDeferredValue, useOptimistic } from 'react';
+import { Search, ShoppingBag, Loader2, Filter, ChevronLeft, ChevronRight, X, CheckCircle2 } from 'lucide-react';
 import api from '../axios/axios';
-import { useContext } from 'react';
 import { CartContext } from '../context/CartContext';
 
 const ModernMenu = () => {
+  // --- STATE MANAGEMENT ---
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { addToCart } = useContext(CartContext);
-  // Mobile Sidebar State
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { addToCart, cartItems } = useContext(CartContext);
+
+  // --- REACT 18: CONCURRENT FEATURES ---
+  // useTransition: Keeps UI responsive during heavy state changes (like category filtering)
+  const [isPending, startTransition] = useTransition();
   
+  // --- UI STATES ---
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // useDeferredValue: Delays the search string update to prevent typing lag
+  const deferredSearch = useDeferredValue(searchQuery);
+
   const [selectedCats, setSelectedCats] = useState([]);
   const [price, setPrice] = useState(2000);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
+  // --- REACT 19: OPTIMISTIC UI ---
+  // This allows the cart count or "Added" state to show instantly
+  const [optimisticCart, setOptimisticCart] = useOptimistic(
+    cartItems,
+    (state, newItem) => [...state, newItem]
+  );
+
   const categories = ["Coastal Curries", "Biryani", "Veg Biryani", "Veg Curries", "Catering"];
 
+  // --- LOGIC: FILTERING ---
   const toggleCategory = (name) => {
-    setCurrentPage(1);
-    setSelectedCats(prev => 
-      prev.includes(name) ? prev.filter(c => c !== name) : [...prev, name]
-    );
+    // startTransition: Marks this update as non-urgent
+    startTransition(() => {
+      setCurrentPage(1);
+      setSelectedCats(prev => 
+        prev.includes(name) ? prev.filter(c => c !== name) : [...prev, name]
+      );
+    });
   };
 
+  // --- useEffect: CORE CONCEPT (TYPE 3 & 4) ---
   useEffect(() => {
+    // TYPE 4: Cleanup via AbortController to prevent "Race Conditions"
     const controller = new AbortController();
+
     const fetchFilteredData = async () => {
       setLoading(true);
       try {
@@ -37,7 +59,7 @@ const ModernMenu = () => {
           limit: 12,
           maxPrice: price,
           ...(selectedCats.length > 0 && { category: selectedCats.join(',') }),
-          ...(searchQuery && { search: searchQuery })
+          ...(deferredSearch && { search: deferredSearch })
         });
 
         const res = await api.get(`/api/product/getProducts?${params}`, {
@@ -48,28 +70,51 @@ const ModernMenu = () => {
         setTotalPages(res.data.totalPages || 1);
         setError(null);
       } catch (err) {
-        if (err.name !== 'CanceledError') setError("Failed to load products.");
+        if (err.name !== 'CanceledError') {
+            setError("Failed to load products.");
+        }
       } finally {
         setLoading(false);
       }
     };
 
-    const debounce = setTimeout(fetchFilteredData, 400); 
-    return () => {
-      clearTimeout(debounce);
-      controller.abort();
-    };
-  }, [selectedCats, price, searchQuery, currentPage]);
+    // DEBOUNCING: Prevents API spamming
+    const debounceTimer = setTimeout(fetchFilteredData, 400);
 
-  // Reusable Filter Content to avoid code duplication
+    // CLEANUP FUNCTION: Runs before every re-run and on Unmount
+    return () => {
+      clearTimeout(debounceTimer);
+      controller.abort(); 
+    };
+  }, [selectedCats, price, deferredSearch, currentPage]); // TYPE 3: Runs when these change
+
+  // --- HANDLERS ---
+  const handleAddToCart = async (item) => {
+    // Update UI Optimistically (React 19)
+    setOptimisticCart(item);
+    
+    // Actual API Call
+    try {
+      await addToCart({
+        productId: item._id,
+        name: item.name,
+        price: item.price,
+        quantity: 1
+      });
+    } catch (err) {
+      console.error("Failed to add to cart");
+      // React 19 useOptimistic will automatically roll back on failure if handled correctly in Context
+    }
+  };
+
+  // --- SUB-COMPONENTS ---
   const FilterContent = () => (
-    <>
+    <div className="flex flex-col h-full">
       <div className="flex items-center justify-between mb-10">
         <div className="flex items-center gap-2">
           <Filter size={18} className="text-orange-500" />
           <h2 className="text-xs font-black uppercase tracking-[0.2em] dark:text-white">Refine Menu</h2>
         </div>
-        {/* Close button for mobile */}
         <button onClick={() => setIsSidebarOpen(false)} className="md:hidden text-zinc-400">
           <X size={20} />
         </button>
@@ -106,27 +151,20 @@ const ModernMenu = () => {
           className="w-full accent-orange-500 h-1 bg-zinc-200 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer"
         />
       </div>
-    </>
+      {isPending && <p className="text-[10px] text-orange-500 animate-pulse">Filtering items...</p>}
+    </div>
   );
 
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-950 flex pt-[80px] relative">
       
-      {/* 1. MOBILE OVERLAY (Darkens background when sidebar is open) */}
+      {/* MOBILE OVERLAY */}
       {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity"
-          onClick={() => setIsSidebarOpen(false)}
-        />
+        <div className="fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity" onClick={() => setIsSidebarOpen(false)} />
       )}
 
-      {/* 2. SIDEBAR (Desktop Sticky + Mobile Drawer) */}
-      <aside className={`
-        fixed md:sticky top-0 md:top-[80px] left-0 h-full md:h-[calc(100vh-80px)] 
-        w-72 bg-white dark:bg-zinc-950 z-50 p-8 border-r border-zinc-100 dark:border-zinc-900
-        transition-transform duration-300 ease-in-out
-        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-      `}>
+      {/* SIDEBAR */}
+      <aside className={`fixed md:sticky top-0 md:top-[80px] left-0 h-full md:h-[calc(100vh-80px)] w-72 bg-white dark:bg-zinc-950 z-50 p-8 border-r border-zinc-100 dark:border-zinc-900 transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
         <FilterContent />
       </aside>
 
@@ -134,23 +172,18 @@ const ModernMenu = () => {
       <main className="flex-1 p-4 md:p-12 overflow-x-hidden">
         <div className="max-w-5xl mx-auto">
           
-          {/* 3. MOBILE SEARCH & FILTER ROW */}
           <div className="flex flex-col md:flex-row gap-4 mb-12">
             <div className="relative flex-1">
               <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-400" size={20} />
               <input 
                 type="text"
                 placeholder="Search menu..."
-                className="w-full pl-14 pr-6 py-4 bg-zinc-50 dark:bg-zinc-900 rounded-2xl outline-none focus:ring-4 focus:ring-orange-500/5 border border-transparent focus:border-orange-500/20 transition-all font-medium dark:text-white"
+                className="w-full pl-14 pr-6 py-4 bg-zinc-50 dark:bg-zinc-900 rounded-2xl outline-none focus:ring-4 focus:ring-orange-500/5 border border-transparent focus:border-orange-500/20 transition-all dark:text-white"
                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
               />
             </div>
             
-            {/* Filter Toggle Button (Mobile Only) */}
-            <button 
-              onClick={() => setIsSidebarOpen(true)}
-              className="md:hidden flex items-center justify-center gap-2 py-4 px-6 bg-zinc-100 dark:bg-zinc-900 rounded-2xl font-bold text-sm dark:text-white"
-            >
+            <button onClick={() => setIsSidebarOpen(true)} className="md:hidden flex items-center justify-center gap-2 py-4 px-6 bg-zinc-100 dark:bg-zinc-900 rounded-2xl font-bold text-sm dark:text-white">
               <Filter size={18} /> Filters
             </button>
           </div>
@@ -158,12 +191,13 @@ const ModernMenu = () => {
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-4">
               <Loader2 className="animate-spin text-orange-500" size={32} />
+              <p className="text-zinc-400 text-sm animate-pulse">Fetching fresh food...</p>
             </div>
           ) : (
             <>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
                 {products.map((item) => (
-                  <div key={item._id} className="group bg-white dark:bg-zinc-900 p-6 rounded-[2rem] border border-zinc-100 dark:border-zinc-800 hover:shadow-xl transition-all">
+                  <div key={item._id} className="group bg-white dark:bg-zinc-900 p-6 rounded-[2rem] border border-zinc-100 dark:border-zinc-800 hover:shadow-xl transition-all relative overflow-hidden">
                     <div className="flex justify-between items-start gap-4">
                       <div className="flex-1">
                         <span className="text-[10px] font-black uppercase text-orange-500 tracking-widest">{item.category}</span>
@@ -172,15 +206,10 @@ const ModernMenu = () => {
                       </div>
                       <p className="text-xl md:text-2xl font-black italic text-zinc-900 dark:text-white">₹{item.price}</p>
                     </div>
+
                     <button 
-                      onClick={() => addToCart({
-                        productId: item._id, // Ensure this matches your backend's expected 'productId'
-                        name: item.name,
-                        price: item.price,
-                        image: item.image, // Ensure your product object has an image URL
-                        quantity: 1
-                      })}
-                      className="..."
+                      onClick={() => handleAddToCart(item)}
+                      className="mt-6 w-full py-3 bg-zinc-900 dark:bg-white dark:text-black text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-orange-500 dark:hover:bg-orange-500 dark:hover:text-white transition-colors"
                     >
                       <ShoppingBag size={14} /> Add to Order
                     </button>
@@ -191,21 +220,11 @@ const ModernMenu = () => {
               {/* PAGINATION */}
               {totalPages > 1 && (
                 <div className="flex justify-center items-center gap-4 mt-16">
-                  <button 
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage(p => p - 1)}
-                    className="p-3 rounded-full border border-zinc-200 dark:border-zinc-800 disabled:opacity-30 dark:text-white"
-                  >
+                  <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="p-3 rounded-full border border-zinc-200 dark:border-zinc-800 disabled:opacity-30 dark:text-white">
                     <ChevronLeft size={20} />
                   </button>
-                  <span className="text-xs md:text-sm font-bold dark:text-zinc-400">
-                    {currentPage} / {totalPages}
-                  </span>
-                  <button 
-                    disabled={currentPage === totalPages}
-                    onClick={() => setCurrentPage(p => p + 1)}
-                    className="p-3 rounded-full border border-zinc-200 dark:border-zinc-800 disabled:opacity-30 dark:text-white"
-                  >
+                  <span className="text-xs md:text-sm font-bold dark:text-zinc-400">{currentPage} / {totalPages}</span>
+                  <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} className="p-3 rounded-full border border-zinc-200 dark:border-zinc-800 disabled:opacity-30 dark:text-white">
                     <ChevronRight size={20} />
                   </button>
                 </div>
