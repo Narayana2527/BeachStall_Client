@@ -1,24 +1,28 @@
 import React, { useState, useEffect, useContext, useTransition, useDeferredValue, useOptimistic } from 'react';
-import { Search, ShoppingBag, Loader2, Filter, ChevronLeft, ChevronRight, X, CheckCircle2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
+import { Search, ShoppingBag, Loader2, Filter, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import api from '../axios/axios';
 import { CartContext } from '../context/CartContext';
+import { AuthContext } from '../context/AuthContext';
 
 const ModernMenu = () => {
+  const navigate = useNavigate();
+  const { user } = useContext(AuthContext); // Check if user is logged in
+  const { addToCart, cartItems } = useContext(CartContext);
+
   // --- STATE MANAGEMENT ---
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { addToCart, cartItems } = useContext(CartContext);
-
-  // --- REACT 18: CONCURRENT FEATURES ---
-  // useTransition: Keeps UI responsive during heavy state changes (like category filtering)
-  const [isPending, startTransition] = useTransition();
   
-  // --- UI STATES ---
+  // REACT 18: Handle heavy UI updates without freezing the screen
+  const [isPending, startTransition] = useTransition();
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
-  // useDeferredValue: Delays the search string update to prevent typing lag
+  // REACT 18: Delay search query processing to keep input field smooth
   const deferredSearch = useDeferredValue(searchQuery);
 
   const [selectedCats, setSelectedCats] = useState([]);
@@ -26,8 +30,7 @@ const ModernMenu = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  // --- REACT 19: OPTIMISTIC UI ---
-  // This allows the cart count or "Added" state to show instantly
+  // REACT 19: Instantly update UI as if the item is already in the cart
   const [optimisticCart, setOptimisticCart] = useOptimistic(
     cartItems,
     (state, newItem) => [...state, newItem]
@@ -35,9 +38,7 @@ const ModernMenu = () => {
 
   const categories = ["Coastal Curries", "Biryani", "Veg Biryani", "Veg Curries", "Catering"];
 
-  // --- LOGIC: FILTERING ---
   const toggleCategory = (name) => {
-    // startTransition: Marks this update as non-urgent
     startTransition(() => {
       setCurrentPage(1);
       setSelectedCats(prev => 
@@ -46,9 +47,9 @@ const ModernMenu = () => {
     });
   };
 
-  // --- useEffect: CORE CONCEPT (TYPE 3 & 4) ---
+  // --- USEEFFECT: DATA FETCHING + CLEANUP (CORE CONCEPTS) ---
   useEffect(() => {
-    // TYPE 4: Cleanup via AbortController to prevent "Race Conditions"
+    // TYPE 4: Cleanup via AbortController to stop "Zombie" requests
     const controller = new AbortController();
 
     const fetchFilteredData = async () => {
@@ -78,22 +79,37 @@ const ModernMenu = () => {
       }
     };
 
-    // DEBOUNCING: Prevents API spamming
+    // DEBOUNCING: Wait 400ms after user stops typing/clicking before calling API
     const debounceTimer = setTimeout(fetchFilteredData, 400);
 
-    // CLEANUP FUNCTION: Runs before every re-run and on Unmount
     return () => {
       clearTimeout(debounceTimer);
-      controller.abort(); 
+      controller.abort(); // Cancel request if component unmounts or deps change
     };
-  }, [selectedCats, price, deferredSearch, currentPage]); // TYPE 3: Runs when these change
+  }, [selectedCats, price, deferredSearch, currentPage]);
 
-  // --- HANDLERS ---
+  // --- AUTH-GUARDED HANDLER ---
   const handleAddToCart = async (item) => {
-    // Update UI Optimistically (React 19)
+    // 1. Auth Check
+    if (!user) {
+      Swal.fire({
+        title: 'Login Required',
+        text: 'Aapko pehle login karna hoga. Redirecting...',
+        icon: 'warning',
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+        willClose: () => {
+          navigate('/login');
+        }
+      });
+      return;
+    }
+
+    // 2. React 19 Optimistic UI Update
     setOptimisticCart(item);
     
-    // Actual API Call
+    // 3. Backend Sync
     try {
       await addToCart({
         productId: item._id,
@@ -101,13 +117,22 @@ const ModernMenu = () => {
         price: item.price,
         quantity: 1
       });
+      
+      // Success Feedback
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Added to order!',
+        showConfirmButton: false,
+        timer: 1500
+      });
     } catch (err) {
-      console.error("Failed to add to cart");
-      // React 19 useOptimistic will automatically roll back on failure if handled correctly in Context
+      Swal.fire('Error', 'Could not add item', 'error');
     }
   };
 
-  // --- SUB-COMPONENTS ---
+  // --- SUB-COMPONENT: FILTER ---
   const FilterContent = () => (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between mb-10">
@@ -156,19 +181,16 @@ const ModernMenu = () => {
   );
 
   return (
-    <div className="min-h-screen bg-white dark:bg-zinc-950 flex pt-[80px] relative">
+    <div className="min-h-screen bg-white dark:bg-zinc-950 flex pt-[80px] relative font-sans">
       
-      {/* MOBILE OVERLAY */}
       {isSidebarOpen && (
         <div className="fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity" onClick={() => setIsSidebarOpen(false)} />
       )}
 
-      {/* SIDEBAR */}
       <aside className={`fixed md:sticky top-0 md:top-[80px] left-0 h-full md:h-[calc(100vh-80px)] w-72 bg-white dark:bg-zinc-950 z-50 p-8 border-r border-zinc-100 dark:border-zinc-900 transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
         <FilterContent />
       </aside>
 
-      {/* MAIN CONTENT */}
       <main className="flex-1 p-4 md:p-12 overflow-x-hidden">
         <div className="max-w-5xl mx-auto">
           
