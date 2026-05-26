@@ -17,6 +17,7 @@ const navLinks = [
   { name: 'Menu', href: '/menu', icon: UtensilsCrossed },
   { name: 'Reservations', href: '/booktable', icon: CalendarDays },
   { name: 'Contact', href: '/contact', icon: MessageSquare },
+  { name: 'Event Planning', href: '/events', icon: MessageSquare },
 ];
 
 const mobileBottomNav = [
@@ -43,53 +44,68 @@ export default function Navbar() {
 
   return (
     <>
-      {/* 💻 TOP NAVBAR */}
-      <nav className="sticky top-0 z-50 bg-white dark:bg-zinc-950/70 backdrop-blur-xl border-b border-gray-100 dark:border-zinc-800/50 transition-colors duration-300">
+      {/* 💻 TOP NAVBAR - Forced White Background */}
+      <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm transition-all duration-300">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="relative flex h-20 items-center justify-between">
             
             {/* LEFT: Mobile Menu Toggle & Desktop Logo */}
             <div className="flex items-center gap-4">
-              <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2 text-gray-600 dark:text-gray-300">
+              <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2 text-gray-600 hover:bg-gray-50 rounded-xl transition-colors">
                 <MenuIcon size={26} />
               </button>
 
               <div className="hidden lg:block shrink-0">
-                <img src="/assets/images/BeachStall.png" alt="Logo" onClick={() => navigate('/')} className="h-14 w-auto cursor-pointer dark:brightness-110" />
+                {/* Logo sized to fit h-20 header perfectly with padding */}
+                <img 
+                  src="/assets/images/BeachStall.png" 
+                  alt="Logo" 
+                  onClick={() => navigate('/')} 
+                  className="h-20 cursor-pointer object-contain hover:scale-105 transition-transform" 
+                />
               </div>
 
-              {/* Desktop Nav Links */}
+              {/* Desktop Nav Links - Colors locked for light background */}
               <div className="hidden lg:flex items-center ml-8 space-x-1">
                 {navLinks.map((item) => (
-                  <NavLink key={item.name} to={item.href} className={({ isActive }) => `px-4 py-2 rounded-xl text-[12px] font-black uppercase tracking-widest transition-all ${isActive ? 'text-indigo-600 bg-indigo-50 dark:bg-indigo-500/10 dark:text-indigo-400' : 'text-gray-400 hover:text-gray-900 dark:text-zinc-500'}`}>
+                  <NavLink 
+                    key={item.name} 
+                    to={item.href} 
+                    className={({ isActive }) => `px-4 py-2 rounded-xl text-[12px] font-black uppercase tracking-widest transition-all ${isActive ? 'text-indigo-600 bg-indigo-50' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}
+                  >
                     {item.name}
                   </NavLink>
                 ))}
               </div>
             </div>
 
-            {/* CENTER: Mobile Logo (Now strictly visible on mobile) */}
+            {/* CENTER: Mobile Logo */}
             <div className="lg:hidden flex items-center justify-center flex-1">
-              <img src="/assets/images/BeachStall.png" alt="Logo" onClick={() => navigate('/')} className="h-10 w-auto cursor-pointer dark:brightness-110" />
+              <img 
+                src="/assets/images/BeachStall.png" 
+                alt="Logo" 
+                onClick={() => navigate('/')} 
+                className="h-20 cursor-pointer object-contain" 
+              />
             </div>
 
             {/* RIGHT: User & Theme */}
             <div className="flex items-center gap-2 sm:gap-4">
               <div className="hidden sm:flex items-center gap-3">
-                <NavLink to="/cart" className="p-2 text-gray-400 dark:text-zinc-500 hover:text-indigo-600 transition-colors">
+                <NavLink to="/cart" className="p-2 text-gray-500 hover:text-indigo-600 transition-colors">
                   <CartBadge />
                 </NavLink>
 
                 {!isLoggedIn ? (
-                  <button onClick={() => navigate('/login')} className="px-6 py-2.5 bg-gray-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-indigo-600 transition-all shadow-lg">
+                  <button onClick={() => navigate('/login')} className="px-6 py-2.5 bg-gray-900 text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-indigo-600 transition-all shadow-lg active:scale-95">
                     Join
                   </button>
                 ) : (
                   <Menu as="div" className="relative">
-                    <MenuButton className="flex items-center gap-3 group px-2 py-1.5 rounded-2xl hover:bg-gray-50 dark:hover:bg-zinc-900 transition-all">
+                    <MenuButton className="flex items-center gap-3 group px-2 py-1.5 rounded-2xl hover:bg-gray-50 transition-all">
                       <div className="hidden md:flex flex-col items-end mr-1">
                         <span className="text-[9px] font-black uppercase tracking-tighter text-indigo-500">{user?.role || 'Premium Member'}</span>
-                        <span className="text-sm font-bold text-gray-900 dark:text-white leading-tight">{user?.name}</span>
+                        <span className="text-sm font-bold text-gray-900 leading-tight">{user?.name}</span>
                       </div>
                       <div className="h-10 w-10 rounded-2xl bg-indigo-600 flex items-center justify-center text-white font-black text-sm shadow-xl shadow-indigo-500/20 rotate-3 group-hover:rotate-0 transition-all">
                         {user?.name?.charAt(0)}
@@ -98,7 +114,7 @@ export default function Navbar() {
                     </MenuButton>
 
                     <Transition as={Fragment} enter="transition duration-200" enterFrom="transform scale-95 opacity-0 translate-y-2" enterTo="transform scale-100 opacity-100 translate-y-0">
-                      <MenuItems className="absolute right-0 mt-4 w-72 rounded-[2.5rem] bg-white dark:bg-zinc-900 p-3 shadow-2xl border border-gray-100 dark:border-zinc-800">
+                      <MenuItems className="absolute right-0 mt-4 w-72 rounded-[2.5rem] bg-white p-3 shadow-2xl border border-gray-100">
                         <div className="px-5 py-5 mb-3 bg-indigo-600 rounded-[2rem] text-white overflow-hidden relative">
                            <Star size={60} className="absolute -right-4 -bottom-4 opacity-20 rotate-12" />
                            <p className="text-[9px] font-black uppercase tracking-[0.2em] opacity-80 mb-1">Authenticated</p>
@@ -108,8 +124,8 @@ export default function Navbar() {
                           <DropdownLink icon={User} label="My Profile" onClick={() => navigate('/profile')} />
                           <DropdownLink icon={Package} label="My Orders" onClick={() => navigate('/profile/orders')} />
                           <DropdownLink icon={CalendarDays} label="My Bookings" onClick={() => navigate('/bookings')} />
-                          <div className="h-[1px] bg-gray-100 dark:bg-zinc-800 my-2 mx-4" />
-                          <button onClick={handleLogout} className="flex items-center gap-3 w-full px-5 py-4 text-[11px] font-black uppercase text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-2xl">
+                          <div className="h-[1px] bg-gray-100 my-2 mx-4" />
+                          <button onClick={handleLogout} className="flex items-center gap-3 w-full px-5 py-4 text-[11px] font-black uppercase text-red-500 hover:bg-red-50 rounded-2xl transition-colors">
                             <LogOut size={18} /> Sign Out
                           </button>
                         </div>
@@ -118,7 +134,7 @@ export default function Navbar() {
                   </Menu>
                 )}
               </div>
-              <div className="pl-2 border-l border-gray-100 dark:border-zinc-800 ml-1">
+              <div className="pl-2 border-l border-gray-100 ml-1">
                 <ThemeToggle />
               </div>
             </div>
@@ -136,7 +152,7 @@ export default function Navbar() {
             <TransitionChild as={Fragment} enter="transform transition ease-in-out duration-300" enterFrom="-translate-x-full" enterTo="translate-x-0" leave="transform transition ease-in-out duration-300" leaveFrom="translate-x-0" leaveTo="-translate-x-full">
               <DialogPanel className="relative flex w-full max-w-xs flex-col bg-white dark:bg-zinc-950 shadow-2xl">
                 <div className="flex px-6 py-8 items-center justify-between border-b dark:border-zinc-800">
-                  <img src="/assets/images/BeachStall.png" alt="Logo" className="h-10 w-auto dark:brightness-110" />
+                  <img src="/assets/images/BeachStall.png" alt="Logo" className="h-20" />
                   <button onClick={() => setIsSidebarOpen(false)} className="p-3 text-gray-400 bg-gray-50 dark:bg-zinc-900 rounded-2xl"><X size={24} /></button>
                 </div>
                 <div className="mt-4 px-4 space-y-2">
@@ -152,7 +168,7 @@ export default function Navbar() {
         </Dialog>
       </Transition>
 
-      {/* 📱 BOTTOM NAV - PINNED TO BOTTOM */}
+      {/* 📱 BOTTOM NAV */}
       {!hideBottomNav && (
         <div className="sm:hidden fixed bottom-0 left-0 right-0 z-[60] bg-white/90 dark:bg-zinc-950/90 backdrop-blur-xl border-t border-gray-100 dark:border-zinc-800 pb-safe">
           <div className="flex items-center justify-around h-16 px-2">
@@ -173,7 +189,6 @@ export default function Navbar() {
               );
             })}
             
-            {/* Mobile User Menu */}
             <Menu as="div" className="flex-1 h-full flex items-center justify-center">
               <MenuButton className="flex flex-col items-center gap-0.5 text-gray-400 dark:text-zinc-500">
                 <div className="p-1.5 rounded-xl">
@@ -196,9 +211,9 @@ export default function Navbar() {
                           <p className="text-[10px] text-indigo-500 font-bold uppercase">{user?.role || 'Member'}</p>
                         </div>
                       </div>
-                      <MenuItem>{({ active }) => <button onClick={() => navigate('/profile')} className="flex w-full items-center gap-3 p-3 rounded-xl font-bold text-gray-700 dark:text-zinc-300"><User size={18} /> Profile</button>}</MenuItem>
-                      <MenuItem>{({ active }) => <button onClick={() => navigate('/profile/orders')} className="flex w-full items-center gap-3 p-3 rounded-xl font-bold text-gray-700 dark:text-zinc-300"><Package size={18} /> Orders</button>}</MenuItem>
-                      <MenuItem>{({ active }) => <button onClick={() => navigate('/profile/orders')} className="flex w-full items-center gap-3 p-3 rounded-xl font-bold text-gray-700 dark:text-zinc-300"><CalendarDays size={18} /> Bookings</button>}</MenuItem>
+                      <MenuItem>{() => <button onClick={() => navigate('/profile')} className="flex w-full items-center gap-3 p-3 rounded-xl font-bold text-gray-700 dark:text-zinc-300"><User size={18} /> Profile</button>}</MenuItem>
+                      <MenuItem>{() => <button onClick={() => navigate('/profile/orders')} className="flex w-full items-center gap-3 p-3 rounded-xl font-bold text-gray-700 dark:text-zinc-300"><Package size={18} /> Orders</button>}</MenuItem>
+                      <MenuItem>{() => <button onClick={() => navigate('/bookings')} className="flex w-full items-center gap-3 p-3 rounded-xl font-bold text-gray-700 dark:text-zinc-300"><CalendarDays size={18} /> Bookings</button>}</MenuItem>
                       <button onClick={handleLogout} className="flex w-full items-center gap-3 p-3 rounded-xl font-bold text-red-500 mt-2 border-t dark:border-zinc-800 pt-3"><LogOut size={18} /> Sign Out</button>
                     </div>
                   )}
@@ -216,7 +231,7 @@ function DropdownLink({ icon: Icon, label, onClick }) {
   return (
     <MenuItem>
       {({ active }) => (
-        <button onClick={onClick} className={`flex items-center gap-4 w-full px-5 py-3.5 text-[11px] font-black uppercase tracking-widest rounded-2xl transition-all ${active ? 'bg-gray-100 dark:bg-zinc-800 text-indigo-600 translate-x-1' : 'text-gray-500 dark:text-zinc-400'}`}>
+        <button onClick={onClick} className={`flex items-center gap-4 w-full px-5 py-3.5 text-[11px] font-black uppercase tracking-widest rounded-2xl transition-all ${active ? 'bg-gray-100 text-indigo-600 translate-x-1' : 'text-gray-500'}`}>
           <Icon size={18} strokeWidth={2.5} /> {label}
         </button>
       )}

@@ -21,6 +21,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import ResetPassword from "./components/ResetPassword";
 import ForgotPassword from "./components/ForgotPassword";
 import CateringPage from "./pages/CateringPage";
+import EventPlanning from "./pages/eventPlanning";
 
 
 
@@ -44,7 +45,7 @@ function App() {
               <Route path="/about" element ={<About />}  />
               <Route path="/menu"  element={<ModernMenu />} />
               <Route path="/contact"  element={<Contact />} />
-              
+              <Route path="/events"  element={<EventPlanning />} />
               {/* Protected-style Routes (Require Login) */}
               <Route path="/catering-booking" element={<CateringPage />} />
               <Route path="/booktable" element={<BookTable />}  />
