@@ -1,0 +1,7 @@
+# netlify.toml — place this in your frontend project root
+# Handles client-side routing (React Router) so direct URL visits don't 404
+
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
