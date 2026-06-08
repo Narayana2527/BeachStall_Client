@@ -1,58 +1,70 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
 import { AuthContext } from '../context/AuthContext';
 import { Trash2, Minus, Plus, ChevronRight, ShoppingBag, ShieldCheck, ArrowLeft, Lock } from 'lucide-react';
 
 const CartPage = () => {
-  const { cart, removeItem, addToCart, fetchCart } = useContext(CartContext);
+  // FIX: Destructure 'cartItems' instead of 'cart' to maintain naming alignment with your Context layout
+  const { cartItems, removeItem, addToCart, fetchCart } = useContext(CartContext);
   const { isLoggedIn } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // Local state to handle the "raw" input values (allows empty string while typing)
+  // Safely ensure we are always referencing a valid array structure
+  const standardCart = useMemo(() => Array.isArray(cartItems) ? cartItems : [], [cartItems]);
+
   const [localQuantities, setLocalQuantities] = useState({});
 
   useEffect(() => {
     if (isLoggedIn) fetchCart();
-  }, [isLoggedIn]);
+  }, [isLoggedIn, fetchCart]);
 
-  // Sync local state with cart whenever cart changes (initial load or external updates)
+  // Synchronize local UI input values whenever backend or optimistic context items shift
   useEffect(() => {
     const qtys = {};
-    cart.forEach(item => {
-      qtys[item.productId] = item.quantity;
+    standardCart.forEach(item => {
+      // Clean fallback lookups for object schema vs flat payload structures
+      const id = item.productId?._id || item.productId || item._id;
+      if (id) {
+        qtys[id] = item.quantity;
+      }
     });
     setLocalQuantities(qtys);
-  }, [cart]);
+  }, [standardCart]);
 
-  const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  // Calculations with safe nested property checks
+  const subtotal = useMemo(() => {
+    return standardCart.reduce((acc, item) => {
+      const price = item.price || item.productId?.price || 0;
+      return acc + (price * item.quantity);
+    }, 0);
+  }, [standardCart]);
+
   const deliveryFee = subtotal > 500 || subtotal === 0 ? 0 : 40;
   const total = subtotal + deliveryFee;
 
-  // 1. Handles typing in the box (allows empty string)
   const handleInputChange = (productId, value) => {
     setLocalQuantities(prev => ({
       ...prev,
-      [productId]: value === "" ? "" : parseInt(value)
+      [productId]: value === "" ? "" : parseInt(value, 10)
     }));
   };
 
-  // 2. Sends the final value to the server
   const syncQuantityWithServer = async (item, newQty) => {
-    const validatedQty = Math.max(1, parseInt(newQty) || 1);
+    const targetProductId = item.productId?._id || item.productId || item._id;
+    const validatedQty = Math.max(1, parseInt(newQty, 10) || 1);
     const delta = validatedQty - item.quantity;
 
     if (delta !== 0) {
       await addToCart({
-        productId: item.productId,
-        name: item.name,
-        price: item.price,
-        image: item.image,
+        productId: targetProductId,
+        name: item.name || item.productId?.name,
+        price: item.price || item.productId?.price,
+        image: item.image || item.productId?.image,
         quantity: delta
       }, false);
     } else {
-        // If no change, reset the local input to the actual item quantity
-        setLocalQuantities(prev => ({ ...prev, [item.productId]: item.quantity }));
+      setLocalQuantities(prev => ({ ...prev, [targetProductId]: item.quantity }));
     }
   };
 
@@ -68,7 +80,7 @@ const CartPage = () => {
     );
   }
 
-  if (cart.length === 0) {
+  if (standardCart.length === 0) {
     return (
       <div className="min-h-[80vh] flex flex-col items-center justify-center text-center px-6 bg-white dark:bg-zinc-950">
         <div className="bg-orange-50 dark:bg-orange-500/10 p-10 rounded-full mb-6">
@@ -84,7 +96,7 @@ const CartPage = () => {
     <div className="bg-gray-50 dark:bg-zinc-950 min-h-screen pb-40 lg:pb-12 transition-colors duration-300">
       <div className="lg:hidden bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md px-4 py-4 flex items-center gap-4 border-b border-gray-100 dark:border-zinc-800 sticky top-0 z-20">
         <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-gray-900 dark:text-white"><ArrowLeft size={24}/></button>
-        <h1 className="text-xl font-black text-gray-900 dark:text-white uppercase">Cart ({cart.length})</h1>
+        <h1 className="text-xl font-black text-gray-900 dark:text-white uppercase">Cart ({standardCart.length})</h1>
       </div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 lg:py-12">
@@ -92,49 +104,66 @@ const CartPage = () => {
           
           <div className="lg:col-span-8 space-y-4">
             <h2 className="hidden lg:block text-3xl font-black text-gray-900 dark:text-white uppercase mb-8">Your Basket</h2>
-            {cart.map((item) => (
-              <div key={item.productId} className="bg-white dark:bg-zinc-900/50 rounded-[2rem] p-4 flex gap-4 border border-gray-100 dark:border-zinc-800/50 shadow-sm">
-                <img src={item.image} alt={item.name} className="w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-2xl bg-gray-50 dark:bg-zinc-800" />
-                
-                <div className="flex-1 flex flex-col justify-between py-1">
-                  <div className="flex justify-between items-start">
-                    <h4 className="font-black text-gray-900 dark:text-zinc-100 leading-tight sm:text-lg">{item.name}</h4>
-                    <button onClick={() => removeItem(item.productId)} className="text-gray-300 dark:text-zinc-600 hover:text-red-500 p-1"><Trash2 size={18} /></button>
-                  </div>
+            {standardCart.map((item) => {
+              // Standardized identifier parsing matching optimistic structures cleanly
+              const currentId = item.productId?._id || item.productId || item._id;
+              const currentName = item.name || item.productId?.name || "Delicious Dish";
+              const currentImage = item.image || item.productId?.image || 'https://images.unsplash.com/photo-1589187151003-0dd3c63b47e9?q=80&w=500';
+              const currentPrice = item.price || item.productId?.price || 0;
+
+              return (
+                <div key={currentId} className="bg-white dark:bg-zinc-900/50 rounded-[2rem] p-4 flex gap-4 border border-gray-100 dark:border-zinc-800/50 shadow-sm">
+                  <img 
+                    src={currentImage} 
+                    alt={currentName} 
+                    className="w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-2xl bg-gray-50 dark:bg-zinc-800" 
+                  />
                   
-                  <div className="flex items-center justify-between mt-4">
-                    <div className="flex items-center bg-gray-50 dark:bg-zinc-800 rounded-xl p-1 border border-gray-100 dark:border-zinc-700">
-                      <button 
-                        onClick={() => syncQuantityWithServer(item, item.quantity - 1)} 
-                        className="p-1.5 text-gray-500 dark:text-zinc-400 hover:text-indigo-600" 
-                        disabled={item.quantity <= 1}
-                      >
-                        <Minus size={14} strokeWidth={3} />
-                      </button>
-
-                      <input 
-                        type="number"
-                        value={localQuantities[item.productId] ?? item.quantity}
-                        onChange={(e) => handleInputChange(item.productId, e.target.value)}
-                        onBlur={(e) => syncQuantityWithServer(item, e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && syncQuantityWithServer(item, e.target.value)}
-                        className="w-12 bg-transparent text-center font-black text-sm text-gray-900 dark:text-white outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      />
-
-                      <button 
-                        onClick={() => syncQuantityWithServer(item, item.quantity + 1)} 
-                        className="p-1.5 text-gray-500 dark:text-zinc-400 hover:text-indigo-600"
-                      >
-                        <Plus size={14} strokeWidth={3} />
+                  <div className="flex-1 flex flex-col justify-between py-1">
+                    <div className="flex justify-between items-start">
+                      <h4 className="font-black text-gray-900 dark:text-zinc-100 leading-tight sm:text-lg">{currentName}</h4>
+                      <button onClick={() => removeItem(currentId)} className="text-gray-300 dark:text-zinc-600 hover:text-red-500 p-1">
+                        <Trash2 size={18} />
                       </button>
                     </div>
-                    <p className="font-black text-gray-900 dark:text-white sm:text-lg">₹{(item.price * item.quantity).toLocaleString()}</p>
+                    
+                    <div className="flex items-center justify-between mt-4">
+                      <div className="flex items-center bg-gray-50 dark:bg-zinc-800 rounded-xl p-1 border border-gray-100 dark:border-zinc-700">
+                        <button 
+                          onClick={() => syncQuantityWithServer(item, item.quantity - 1)} 
+                          className="p-1.5 text-gray-500 dark:text-zinc-400 hover:text-indigo-600" 
+                          disabled={item.quantity <= 1}
+                        >
+                          <Minus size={14} strokeWidth={3} />
+                        </button>
+
+                        <input 
+                          type="number"
+                          value={localQuantities[currentId] ?? item.quantity}
+                          onChange={(e) => handleInputChange(currentId, e.target.value)}
+                          onBlur={(e) => syncQuantityWithServer(item, e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && syncQuantityWithServer(item, e.target.value)}
+                          className="w-12 bg-transparent text-center font-black text-sm text-gray-900 dark:text-white outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+
+                        <button 
+                          onClick={() => syncQuantityWithServer(item, item.quantity + 1)} 
+                          className="p-1.5 text-gray-500 dark:text-zinc-400 hover:text-indigo-600"
+                        >
+                          <Plus size={14} strokeWidth={3} />
+                        </button>
+                      </div>
+                      <p className="font-black text-gray-900 dark:text-white sm:text-lg">
+                        ₹{(currentPrice * item.quantity).toLocaleString()}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
+          {/* Sidebar Summary Area */}
           <div className="hidden lg:block lg:col-span-4">
             <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-8 shadow-2xl border border-gray-50 dark:border-zinc-800 sticky top-24">
               <h3 className="text-xl font-black mb-8 text-gray-900 dark:text-white uppercase tracking-widest">Order Summary</h3>
@@ -159,9 +188,11 @@ const CartPage = () => {
               </button>
             </div>
           </div>
+
         </div>
       </div>
 
+      {/* Mobile Footer Sticky Action */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl p-5 border-t border-gray-100 dark:border-zinc-800 z-[100] pb-safe">
         <div className="flex items-end justify-between mb-4 px-1">
           <div>
@@ -176,6 +207,7 @@ const CartPage = () => {
           Checkout Now <ChevronRight size={18} />
         </button>
       </div>
+
     </div>
   );
 };

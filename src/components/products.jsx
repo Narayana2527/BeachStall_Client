@@ -1,13 +1,13 @@
 import React, { useContext, useEffect, useRef } from 'react';
 import { CartContext } from '../context/CartContext';
-import { AuthContext } from '../context/AuthContext'; // 1. Import AuthContext
+import { AuthContext } from '../context/AuthContext'; 
 import { ShoppingBag, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
 export default function Items({ title, products }) {
   const { addToCart } = useContext(CartContext);
-  const { isLoggedIn } = useContext(AuthContext); // 2. Use isLoggedIn from Context
+  const { isLoggedIn } = useContext(AuthContext); 
   const navigate = useNavigate();
   const scrollContainerRef = useRef(null);
 
@@ -17,9 +17,12 @@ export default function Items({ title, products }) {
     }
   }, [title]);
 
-  const handleAddToCart = (product) => {
-    // 3. Logic remains clean: If not logged in, redirect.
-    // The CartContext.js will now use 'withCredentials: true' to send the cookie.
+  const handleAddToCart = (product, e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
     if (!isLoggedIn) {
       Swal.fire({
         title: 'Login Required',
@@ -37,15 +40,25 @@ export default function Items({ title, products }) {
       return;
     }
 
+    // Explicitly package product metadata so CartContext accepts it smoothly
     const productData = {
-      productId: product._id, // MongoDB standard
+      productId: product._id, 
       name: product.name,
       price: product.price,
-      image: product.image,
+      image: product.image, // Ensure image is attached explicitly
       quantity: 1
     };
 
     addToCart(productData);
+    
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: `${product.name} added to cart!`,
+      showConfirmButton: false,
+      timer: 1500
+    });
   };
 
   const flowBgStyle = {
@@ -121,7 +134,7 @@ export default function Items({ title, products }) {
                 </div>
 
                 <button 
-                  onClick={() => handleAddToCart(product)}
+                  onClick={(e) => handleAddToCart(product, e)}
                   className="relative z-10 mt-8 w-full overflow-hidden rounded-2xl bg-gray-900 dark:bg-zinc-100 transition-all active:scale-95 group/btn"
                 >
                   <div className="absolute inset-0 bg-orange-500 translate-y-full transition-transform duration-300 group-hover/btn:translate-y-0" />

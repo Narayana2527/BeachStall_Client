@@ -1,6 +1,6 @@
 // pages/Profile.jsx
 import React, { useEffect, useState } from 'react';
-import { getMyOrders } from '../services/orderService';
+import { getMyOrders } from '../services/orderServices';
 
 const Profile = () => {
   const [orders, setOrders] = useState([]);

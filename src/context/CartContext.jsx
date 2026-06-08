@@ -11,37 +11,27 @@ export const CartProvider = ({ children }) => {
 
   const CART_API_PATH = '/api/cart';
 
-  // Helper to clear local state
   const clearCart = useCallback(() => {
     setCart([]);
   }, []);
 
-  // 1. Fetch Cart (Cookies handle auth)
   const fetchCart = useCallback(async () => {
     try {
       const res = await api.get(CART_API_PATH);
-      // Ensure we set the items array correctly based on your controller response
       setCart(res.data.items || []);
     } catch (err) {
-      console.error("Cart fetch error:", err.response?.data || err.message);
-      if (err.response?.status === 401) {
-        setCart([]);
-      }
+      console.error('Cart fetch error:', err.response?.data || err.message);
+      if (err.response?.status === 401) setCart([]);
     }
   }, []);
 
-  // 2. Sync Cart with Login State
   useEffect(() => {
     if (!authLoading) {
-      if (isLoggedIn) {
-        fetchCart();
-      } else {
-        clearCart();
-      }
+      if (isLoggedIn) fetchCart();
+      else clearCart();
     }
   }, [isLoggedIn, authLoading, fetchCart, clearCart]);
 
-  // 3. Add to Cart / Update Quantity
   const addToCart = async (product, showToast = true) => {
     if (!isLoggedIn) {
       Swal.fire({
@@ -54,31 +44,24 @@ export const CartProvider = ({ children }) => {
     }
 
     try {
-      /**
-       * NORMALIZATION FIX:
-       * Your backend controller expects: { productId, name, price, image, quantity }
-       * Some frontend components might pass 'item._id' instead of 'productId'.
-       */
       const cartPayload = {
         productId: product._id || product.productId,
         name: product.name,
         price: product.price,
         image: product.image || (product.images && product.images[0]),
-        quantity: product.quantity || 1 // Defaults to 1 for new additions
+        quantity: product.quantity || 1,
       };
 
       const res = await api.post(`${CART_API_PATH}/add`, cartPayload);
-      
-      // Update local state with the new items list returned from backend
       setCart(res.data.items || []);
-      
+
       if (showToast) {
         const isDark = document.documentElement.classList.contains('dark');
         Swal.fire({
           toast: true,
           position: 'top-end',
           icon: 'success',
-          title: 'Cart Updated',
+          title: 'Added to cart!',
           showConfirmButton: false,
           timer: 1500,
           background: isDark ? '#18181b' : '#fff',
@@ -86,7 +69,7 @@ export const CartProvider = ({ children }) => {
         });
       }
     } catch (err) {
-      console.error("Add to cart error:", err);
+      console.error('Add to cart error:', err);
       Swal.fire({
         icon: 'error',
         title: 'Oops...',
@@ -96,24 +79,27 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  // 4. Remove Item
   const removeItem = async (productId) => {
     try {
       const res = await api.delete(`${CART_API_PATH}/remove/${productId}`);
       setCart(res.data.items || []);
     } catch (err) {
-      console.error("Remove item error:", err);
+      console.error('Remove item error:', err);
     }
   };
 
+  const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+  const cartTotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+
   const value = {
     cart,
+    cartItems: cart,   // alias used by menu.jsx
     addToCart,
     removeItem,
     fetchCart,
     clearCart,
-    cartCount: cart.reduce((acc, item) => acc + item.quantity, 0),
-    cartTotal: cart.reduce((acc, item) => acc + (item.price * item.quantity), 0)
+    cartCount,
+    cartTotal,
   };
 
   return (

@@ -1,16 +1,16 @@
 import axios from 'axios';
- 
+
 const api = axios.create({
-  // Falls back to the live Vercel URL so the app always works,
-  // even if someone forgets to set the env variable.
-  baseURL: import.meta.env.VITE_API_URL || 'https://beach-stall-server-gezy.vercel.app',
-  withCredentials: true,   // keeps JWT cookie working for auth/cart routes
+  // Empty baseURL in dev = requests go to same origin (localhost:5173)
+  // Vite proxy then forwards /api/* to localhost:5000
+  // In production (Netlify), VITE_API_URL is set to the Vercel server URL
+  baseURL: import.meta.env.VITE_API_URL || '',
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
 });
- 
-// Optional: surface API errors clearly in the console during development
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -24,5 +24,5 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
- 
+
 export default api;

@@ -46,8 +46,9 @@ const ModernMenu = () => {
   const deferredSearch = useDeferredValue(searchQuery);
 
   /* ── optimistic cart ── */
+  // Normalizing the state structure to match the cart array elements safely
   const [optimisticCart, setOptimisticCart] = useOptimistic(
-    cartItems,
+    cartItems || [],
     (state, newItem) => [...state, newItem],
   );
 
@@ -62,7 +63,6 @@ const ModernMenu = () => {
       setError(null);
       try {
         const res = await api.get('/api/product/allProducts');
-        // getAllProducts controller returns a plain array, NOT { products: [] }
         const data = Array.isArray(res.data) ? res.data : [];
         if (!cancelled) {
           setAllProducts(data);
@@ -129,8 +129,13 @@ const ModernMenu = () => {
     });
   }, [priceCeiling]);
 
-  const handleAddToCart = useCallback(async (item) => {
-    if (!user) {
+  const handleAddToCart = useCallback(async (item, e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    if (!user) { 
       Swal.fire({
         title: 'Welcome!',
         text: 'Please login to start your beach order.',
@@ -140,27 +145,42 @@ const ModernMenu = () => {
       navigate('/login');
       return;
     }
-    setOptimisticCart(item);
+
+    // Explicitly structure payload to mirror the line-item shape used in CartContext tracking
+    const cartPayload = { productId: item._id, name: item.name, price: item.price, quantity: 1 };
+    
+    setOptimisticCart(cartPayload);
     try {
-      await addToCart({ productId: item._id, name: item.name, price: item.price, quantity: 1 });
+      await addToCart(cartPayload);
       Swal.fire({
-        toast: true, position: 'top-end', icon: 'success',
-        title: `${item.name} added!`, showConfirmButton: false, timer: 1500,
+        toast: true, 
+        position: 'top-end', 
+        icon: 'success',
+        title: `${item.name} added!`, 
+        showConfirmButton: false, 
+        timer: 1500,
       });
-    } catch {
+    } catch (error) {
+      console.error("Cart synchronization error:", error);
       Swal.fire('Error', 'Could not add item. Please try again.', 'error');
     }
   }, [user, navigate, addToCart, setOptimisticCart]);
 
+  // Robust deep match supporting schema layouts checking product targets directly
   const isInCart = useCallback(
-    (id) => (optimisticCart || []).some((c) => c.productId === id || c._id === id),
+    (id) => {
+      return (optimisticCart || []).some((c) => {
+        const itemProductId = c.productId || c.product?._id || c._id;
+        return itemProductId === id;
+      });
+    },
     [optimisticCart],
   );
 
   const activeFilterCount = selectedCats.length + (maxPrice < priceCeiling ? 1 : 0);
 
   /* ══════════════════════════════════════════════════════════════════════════
-   *  RENDER
+   * RENDER
    * ═══════════════════════════════════════════════════════════════════════ */
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex pt-[80px] font-sans">
@@ -375,7 +395,7 @@ const ModernMenu = () => {
                     key={item._id}
                     item={item}
                     inCart={isInCart(item._id)}
-                    onAddToCart={handleAddToCart}
+                    onAddToCart={(e) => handleAddToCart(item, e)} 
                   />
                 ))}
               </div>
@@ -428,7 +448,7 @@ const ProductCard = React.memo(({ item, inCart, onAddToCart }) => (
         {item.description}
       </p>
       <button
-        onClick={() => onAddToCart(item)}
+        onClick={(e) => onAddToCart(e)}
         disabled={inCart}
         className={`
           w-full py-3 rounded-xl font-bold text-xs uppercase tracking-widest

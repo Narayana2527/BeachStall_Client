@@ -1,17 +1,16 @@
-import axios from 'axios';
-
-const API_URL = 'https://beach-stall-server-gezy.vercel.app/api/orders';
-
-const getAuthHeaders = () => ({
-  headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-});
+import api from '../axios/axios';
 
 export const placeOrder = async (orderData) => {
-  // If this fails, the catch block in your component will trigger
-  const response = await axios.post(`${API_URL}/create`, orderData, getAuthHeaders());
-  return response.data; 
+  const response = await api.post('/api/orders/create', orderData);
+  return response.data;
 };
+
 export const getMyOrders = async () => {
-  const response = await axios.get(`${API_URL}/myorders`, getAuthHeaders());
+  const response = await api.get('/api/orders/myorders');
+  return response.data;
+};
+
+export const cancelOrder = async (orderId) => {
+  const response = await api.put(`/api/orders/${orderId}/cancel`);
   return response.data;
 };
